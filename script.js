@@ -1,7 +1,7 @@
 /**
  * ============================================================
  *  PoseAlert — script.js
- *  Tác giả: [Tên sinh viên]
+ *  Tác giả: [Vương Lâm]
  *  Mô tả: Logic chính cho ứng dụng nhận diện tư thế ngồi học
  *         sử dụng Teachable Machine Pose của Google.
  * ============================================================
