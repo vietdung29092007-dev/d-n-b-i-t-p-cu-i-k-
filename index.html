@@ -44,8 +44,10 @@
       <div class="panel-title">📷 Camera & Nhận diện</div>
 
       <div class="camera-container">
-        <!-- Canvas để Teachable Machine vẽ khung xương lên -->
+        <!-- Canvas để vẽ hình ảnh camera + khung xương MoveNet -->
         <canvas id="canvas"></canvas>
+        <!-- Video ẩn: nguồn webcam cho MoveNet -->
+        <video id="webcam-video" autoplay playsinline style="display:none;"></video>
         <div class="camera-overlay" id="camera-overlay">
           <div class="overlay-content">
             <div class="big-icon">📷</div>
@@ -145,9 +147,9 @@
   </main>
 
   <!-- ========== THƯ VIỆN ========== -->
-  <!-- Teachable Machine Pose: Thư viện của Google để chạy model AI -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/pose@0.8/dist/teachablemachine-pose.min.js"></script>
+  <!-- TensorFlow.js + MoveNet Pose Detection -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection"></script>
   <!-- Chart.js: Thư viện vẽ biểu đồ -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 

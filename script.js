@@ -3,31 +3,32 @@
  *  PoseAlert — script.js
  *  Tác giả: [Vương Lâm]
  *  Mô tả: Logic chính cho ứng dụng nhận diện tư thế ngồi học
- *         sử dụng Teachable Machine Pose của Google.
+ *         sử dụng TensorFlow.js MoveNet Pose Estimation.
+ *         Phân loại tư thế bằng thuật toán hình học trên keypoints.
  * ============================================================
  */
 
 // ============================================================
-// PHẦN 1: CẤU HÌNH — Thay URL model của bạn vào đây
+// PHẦN 1: CẤU HÌNH
 // ============================================================
 
-/**
- * HƯỚNG DẪN LẤY MODEL URL:
- * 1. Vào teachablemachine.withgoogle.com
- * 2. Tạo dự án Pose → Train → Export Model → Upload
- * 3. Sao chép URL (kết thúc bằng /)
- * 4. Dán vào biến MODEL_URL bên dưới
- */
-const MODEL_URL = "https://teachablemachine.withgoogle.com/models/THAY_URL_CUA_BAN/";
-// Ví dụ: "https://teachablemachine.withgoogle.com/models/abc123XYZ/"
-
 // ---- Cấu hình tư thế ----
-// QUAN TRỌNG: Thứ tự và tên phải khớp CHÍNH XÁC với nhãn trong Teachable Machine
+// Mỗi tư thế có icon, class CSS cho thanh %, và cờ isGood
 const POSE_CONFIG = {
   "Ngồi đúng":    { icon: "✅", barClass: "good",  isGood: true  },
   "Cúi đầu":      { icon: "🙇", barClass: "bad-1", isGood: false },
   "Vẹo lưng":     { icon: "↩️", barClass: "bad-2", isGood: false },
   "Mắt quá gần":  { icon: "👀", barClass: "bad-3", isGood: false },
+};
+
+// ---- Ngưỡng phát hiện tư thế sai ----
+// Có thể điều chỉnh các giá trị này để phù hợp với góc camera
+const POSE_THRESHOLDS = {
+  headBowRatio: 0.5,         // Cúi đầu khi (khoảng cách mũi-vai / rộng vai) < ngưỡng
+  shoulderTiltAngle: 12,     // Vẹo vai khi góc nghiêng > ngưỡng (độ)
+  lateralOffsetRatio: 0.3,   // Nghiêng người khi lệch ngang vai-hông > ngưỡng
+  faceCloseRatio: 0.40,      // Mắt quá gần khi rộng mặt / rộng canvas > ngưỡng
+  minKeypointScore: 0.3,     // Độ tin cậy tối thiểu của keypoint
 };
 
 // ---- Cấu hình cảnh báo ----
@@ -37,30 +38,44 @@ const BAD_POSE_ALERT_SECONDS = 30; // Cảnh báo sau bao nhiêu giây ngồi sa
 const POMODORO_WORK_MINUTES  = 25; // Thời gian tập trung
 const POMODORO_BREAK_MINUTES = 5;  // Thời gian nghỉ
 
+// ---- Kết nối khung xương (17 keypoints COCO) ----
+// Mỗi cặp [i, j] = đường nối giữa keypoint thứ i và j
+const SKELETON_CONNECTIONS = [
+  [0, 1], [0, 2], [1, 3], [2, 4],     // Đầu
+  [5, 6],                               // Vai
+  [5, 7], [7, 9],                       // Tay trái
+  [6, 8], [8, 10],                      // Tay phải
+  [5, 11], [6, 12],                     // Thân
+  [11, 12],                              // Hông
+  [11, 13], [13, 15],                    // Chân trái
+  [12, 14], [14, 16],                    // Chân phải
+];
+
 // ============================================================
 // PHẦN 2: BIẾN TOÀN CỤC (State của ứng dụng)
 // ============================================================
 
-let model, webcam, ctx;   // Model AI, webcam, và canvas context
-let isRunning = false;    // App có đang chạy không
+let detector, video, ctx;    // MoveNet detector, video element, canvas context
+let isRunning = false;       // App có đang chạy không
+let mediaStream = null;      // MediaStream từ camera (để dừng khi cần)
 
 // --- State Timer cảnh báo ---
-let badPoseTimer = 0;     // Bộ đếm giây tư thế sai (tăng mỗi giây)
-let badPoseInterval = null; // ID của setInterval cho timer
+let badPoseTimer = 0;        // Bộ đếm giây tư thế sai (tăng mỗi giây)
+let badPoseInterval = null;  // ID của setInterval cho timer
 
 // --- State Thống kê ---
 let stats = {
-  totalSeconds: 0,        // Tổng số giây đã đo
-  goodSeconds: 0,         // Số giây ngồi đúng
-  badSeconds: 0,          // Số giây ngồi sai
-  alertCount: 0,          // Số lần cảnh báo
-  sessionStartTime: null, // Thời điểm bắt đầu phiên
+  totalSeconds: 0,           // Tổng số giây đã đo
+  goodSeconds: 0,            // Số giây ngồi đúng
+  badSeconds: 0,             // Số giây ngồi sai
+  alertCount: 0,             // Số lần cảnh báo
+  sessionStartTime: null,    // Thời điểm bắt đầu phiên
 };
 
 // --- State Pomodoro ---
 let pomodoroInterval = null;
 let pomodoroSeconds = POMODORO_WORK_MINUTES * 60;
-let pomodoroIsWork = true; // true = đang học, false = đang nghỉ
+let pomodoroIsWork = true;   // true = đang học, false = đang nghỉ
 let pomodoroIsRunning = false;
 let pomodoroCycles = 0;
 
@@ -77,34 +92,51 @@ let lineDataInterval = null;
 let currentPoseName = "";
 let currentPoseIsGood = true;
 
+// --- Smoothing: Tránh nhấp nháy tư thế giữa các frame ---
+let poseHistory = [];              // Buffer lưu kết quả N frame gần nhất
+const POSE_SMOOTHING_FRAMES = 5;   // Số frame để smoothing
+
 // ============================================================
 // PHẦN 3: KHỞI ĐỘNG VÀ DỪNG ỨNG DỤNG
 // ============================================================
 
 /**
- * startApp() — Khởi động camera và model AI
+ * startApp() — Khởi động camera và model MoveNet
  * Gọi khi người dùng nhấn nút "Bắt đầu"
  */
 async function startApp() {
   updateStatus("Đang tải model AI...", "");
   try {
-    // Bước 1: Tải model từ Teachable Machine
-    const modelURL     = MODEL_URL + "model.json";
-    const metadataURL  = MODEL_URL + "metadata.json";
-    model = await tmPose.load(modelURL, metadataURL);
-    console.log("✅ Model AI đã tải xong!");
+    // Bước 1: Tải MoveNet model (Lightning = nhanh, phù hợp realtime)
+    detector = await poseDetection.createDetector(
+      poseDetection.SupportedModels.MoveNet,
+      {
+        modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING,
+      }
+    );
+    console.log("✅ MoveNet model đã tải xong!");
 
-    // Bước 2: Khởi động webcam
-    // tmPose.Webcam(width, height, flip_ngang)
-    const size = 400;
-    webcam = new tmPose.Webcam(size, size, true);
-    await webcam.setup();   // Xin quyền truy cập camera
-    await webcam.play();    // Bắt đầu phát camera
+    // Bước 2: Khởi động webcam bằng getUserMedia (native browser API)
+    video = document.getElementById("webcam-video");
+    mediaStream = await navigator.mediaDevices.getUserMedia({
+      video: { width: 640, height: 480, facingMode: "user" },
+      audio: false,
+    });
+    video.srcObject = mediaStream;
+
+    // Đợi video sẵn sàng
+    await new Promise((resolve) => {
+      video.onloadedmetadata = () => {
+        video.play();
+        resolve();
+      };
+    });
+    console.log("✅ Camera đã khởi động!");
 
     // Bước 3: Thiết lập canvas để vẽ hình ảnh
     const canvas = document.getElementById("canvas");
-    canvas.width  = size;
-    canvas.height = size;
+    canvas.width  = video.videoWidth  || 640;
+    canvas.height = video.videoHeight || 480;
     ctx = canvas.getContext("2d");
 
     // Bước 4: Ẩn overlay "chờ khởi động"
@@ -123,6 +155,9 @@ async function startApp() {
     document.getElementById("btn-start").classList.add("hidden");
     document.getElementById("btn-stop").classList.remove("hidden");
 
+    // Reset smoothing buffer
+    poseHistory = [];
+
     isRunning = true;
     updateStatus("Đang nhận diện...", "active");
 
@@ -131,8 +166,8 @@ async function startApp() {
 
   } catch (err) {
     console.error("❌ Lỗi khởi động:", err);
-    updateStatus("Lỗi! Kiểm tra URL model.", "");
-    alert("Không thể khởi động!\n\nLý do: " + err.message + "\n\nHãy kiểm tra:\n1. URL model trong biến MODEL_URL\n2. Cho phép truy cập camera");
+    updateStatus("Lỗi! Kiểm tra camera.", "");
+    alert("Không thể khởi động!\n\nLý do: " + err.message + "\n\nHãy kiểm tra:\n1. Cho phép truy cập camera\n2. Kết nối internet để tải model");
   }
 }
 
@@ -141,7 +176,16 @@ async function startApp() {
  */
 function stopApp() {
   isRunning = false;
-  if (webcam) webcam.stop();
+
+  // Dừng camera stream (giải phóng camera)
+  if (mediaStream) {
+    mediaStream.getTracks().forEach(track => track.stop());
+    mediaStream = null;
+  }
+  if (video) {
+    video.srcObject = null;
+  }
+
   clearInterval(badPoseInterval);
   clearInterval(lineDataInterval);
   document.getElementById("btn-start").classList.remove("hidden");
@@ -158,55 +202,349 @@ function stopApp() {
 
 /**
  * predictionLoop() — Hàm chạy liên tục
- * Mỗi frame: cập nhật webcam → nhận diện → cập nhật UI
+ * Mỗi frame: nhận diện pose → phân loại tư thế → cập nhật UI
  */
 async function predictionLoop() {
   if (!isRunning) return; // Dừng vòng lặp nếu app đã stop
 
-  // 1. Cập nhật frame webcam
-  webcam.update();
-
-  // 2. Dự đoán tư thế từ frame hiện tại
+  // Chạy nhận diện
   await predict();
 
-  // 3. Yêu cầu vẽ frame tiếp theo (vòng lặp animation)
+  // Yêu cầu vẽ frame tiếp theo (vòng lặp animation)
   window.requestAnimationFrame(predictionLoop);
 }
 
 /**
- * predict() — Gọi model AI để nhận diện tư thế
+ * predict() — Gọi MoveNet để nhận diện tư thế
  */
 async function predict() {
-  // Teachable Machine trả về:
-  // - pose: thông tin các điểm khớp trên cơ thể (keypoints)
-  // - posenetOutput: tensor đặc trưng dùng cho model
-  const { pose, posenetOutput } = await model.estimatePose(webcam.canvas);
+  // Kiểm tra video đã sẵn sàng chưa
+  if (!detector || !video || video.readyState < 2) return;
 
-  // Dự đoán xác suất từng tư thế
-  const prediction = await model.predict(posenetOutput);
+  // MoveNet trả về mảng poses, mỗi pose có 17 keypoints
+  const poses = await detector.estimatePoses(video);
 
-  // Vẽ khung xương (skeleton) lên canvas
-  drawPose(pose);
+  // Vẽ camera + skeleton lên canvas
+  drawFrame(poses);
 
-  // Cập nhật giao diện với kết quả
-  updateUI(prediction);
+  // Nếu phát hiện người, phân loại tư thế
+  if (poses.length > 0) {
+    const keypoints = poses[0].keypoints;
+
+    // Phân loại tư thế bằng thuật toán hình học
+    const classification = classifyPose(keypoints);
+
+    // Smoothing: lấy tư thế xuất hiện nhiều nhất trong N frame
+    const smoothedResult = smoothPoseResult(classification);
+
+    // Tạo prediction tương thích với updateUI()
+    const prediction = buildPrediction(smoothedResult);
+    updateUI(prediction);
+  }
+}
+
+// ============================================================
+// PHẦN 4a: PHÂN LOẠI TƯ THẾ BẰNG THUẬT TOÁN HÌNH HỌC
+// ============================================================
+
+/**
+ * classifyPose() — Phân tích keypoints để xác định tư thế
+ * Trả về: { name: "Tên tư thế", confidence: 0.0 - 1.0 }
+ *
+ * 17 Keypoints (MoveNet COCO):
+ *        0-nose
+ *       / \
+ *    1-L_eye  2-R_eye
+ *    3-L_ear  4-R_ear
+ *    5-L_shoulder --- 6-R_shoulder
+ *    |                |
+ *   11-L_hip  ---- 12-R_hip
+ */
+function classifyPose(keypoints) {
+  const minScore = POSE_THRESHOLDS.minKeypointScore;
+
+  // Lấy các keypoint cần thiết
+  const nose          = keypoints[0];
+  const leftEye       = keypoints[1];
+  const rightEye      = keypoints[2];
+  const leftEar       = keypoints[3];
+  const rightEar      = keypoints[4];
+  const leftShoulder  = keypoints[5];
+  const rightShoulder = keypoints[6];
+  const leftHip       = keypoints[11];
+  const rightHip      = keypoints[12];
+
+  // Kiểm tra đủ keypoint quan trọng không
+  const hasShoulders = leftShoulder.score > minScore && rightShoulder.score > minScore;
+  const hasNose      = nose.score > minScore;
+  const hasEyes      = leftEye.score > minScore && rightEye.score > minScore;
+
+  if (!hasShoulders) {
+    // Không nhìn thấy vai → không đủ dữ liệu, mặc định ngồi đúng
+    return { name: "Ngồi đúng", confidence: 0.5 };
+  }
+
+  const canvasWidth = ctx.canvas.width;
+
+  // --- Kiểm tra 1: Mắt quá gần (ưu tiên cao nhất) ---
+  if (hasEyes || (leftEar.score > minScore && rightEar.score > minScore)) {
+    const tooCloseResult = detectTooClose(keypoints, canvasWidth);
+    if (tooCloseResult.detected) {
+      return { name: "Mắt quá gần", confidence: tooCloseResult.confidence };
+    }
+  }
+
+  // --- Kiểm tra 2: Cúi đầu ---
+  if (hasNose) {
+    const headBowResult = detectHeadBow(keypoints);
+    if (headBowResult.detected) {
+      return { name: "Cúi đầu", confidence: headBowResult.confidence };
+    }
+  }
+
+  // --- Kiểm tra 3: Vẹo lưng ---
+  const tiltResult = detectSpineTilt(keypoints);
+  if (tiltResult.detected) {
+    return { name: "Vẹo lưng", confidence: tiltResult.confidence };
+  }
+
+  // --- Mặc định: Ngồi đúng ---
+  return { name: "Ngồi đúng", confidence: 0.9 };
 }
 
 /**
- * drawPose() — Vẽ điểm khớp và đường xương lên canvas
+ * detectHeadBow() — Phát hiện cúi đầu
+ * Nguyên lý: Khi ngồi thẳng, mũi (nose) ở xa phía trên vai.
+ *            Khi cúi đầu, mũi hạ xuống gần hoặc ngang vai.
+ * Tính: ratio = (vai.y - mũi.y) / rộng_vai
+ *       ratio < ngưỡng → đang cúi đầu
  */
-function drawPose(pose) {
-  if (!webcam || !ctx) return;
+function detectHeadBow(keypoints) {
+  const nose          = keypoints[0];
+  const leftShoulder  = keypoints[5];
+  const rightShoulder = keypoints[6];
 
-  // Vẽ ảnh từ webcam làm nền
-  ctx.drawImage(webcam.canvas, 0, 0);
+  const midShoulderY = (leftShoulder.y + rightShoulder.y) / 2;
+  const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x);
 
-  // Nếu nhận diện được người, vẽ khung xương
-  if (pose) {
-    const minPartConfidence = 0.5; // Chỉ vẽ điểm có độ tin cậy > 50%
-    tmPose.drawKeypoints(pose.keypoints, minPartConfidence, ctx);
-    tmPose.drawSkeleton(pose.keypoints, minPartConfidence, ctx);
+  if (shoulderWidth < 10) return { detected: false }; // Tránh chia cho 0
+
+  // Khoảng cách dọc: vai.y - mũi.y (dương = mũi ở trên vai)
+  const verticalDiff = midShoulderY - nose.y;
+  const ratio = verticalDiff / shoulderWidth;
+
+  const threshold = POSE_THRESHOLDS.headBowRatio;
+  if (ratio < threshold) {
+    // Confidence tỷ lệ thuận với mức vi phạm
+    const confidence = Math.min(0.95, 0.6 + (threshold - ratio) * 0.5);
+    return { detected: true, confidence, ratio };
   }
+
+  return { detected: false, ratio };
+}
+
+/**
+ * detectSpineTilt() — Phát hiện vẹo lưng / nghiêng người
+ * Nguyên lý 1: Hai vai không cân bằng → góc nghiêng vai > ngưỡng
+ * Nguyên lý 2: Trung tâm vai lệch ngang so với trung tâm hông
+ */
+function detectSpineTilt(keypoints) {
+  const leftShoulder  = keypoints[5];
+  const rightShoulder = keypoints[6];
+  const leftHip       = keypoints[11];
+  const rightHip      = keypoints[12];
+  const minScore      = POSE_THRESHOLDS.minKeypointScore;
+
+  // Góc nghiêng vai
+  const shoulderDy = Math.abs(leftShoulder.y - rightShoulder.y);
+  const shoulderDx = Math.abs(leftShoulder.x - rightShoulder.x);
+  const shoulderTiltAngle = Math.atan2(shoulderDy, shoulderDx) * (180 / Math.PI);
+
+  if (shoulderTiltAngle > POSE_THRESHOLDS.shoulderTiltAngle) {
+    const confidence = Math.min(0.95, 0.6 + (shoulderTiltAngle - POSE_THRESHOLDS.shoulderTiltAngle) * 0.02);
+    return { detected: true, confidence, angle: shoulderTiltAngle };
+  }
+
+  // Nếu thấy hông: kiểm tra lệch ngang thân
+  if (leftHip.score > minScore && rightHip.score > minScore) {
+    const midShoulderX  = (leftShoulder.x + rightShoulder.x) / 2;
+    const midHipX       = (leftHip.x + rightHip.x) / 2;
+    const lateralOffset = Math.abs(midShoulderX - midHipX);
+    const shoulderWidth = Math.abs(leftShoulder.x - rightShoulder.x);
+
+    if (shoulderWidth > 10) {
+      const offsetRatio = lateralOffset / shoulderWidth;
+      if (offsetRatio > POSE_THRESHOLDS.lateralOffsetRatio) {
+        const confidence = Math.min(0.95, 0.6 + (offsetRatio - POSE_THRESHOLDS.lateralOffsetRatio) * 1.0);
+        return { detected: true, confidence, offsetRatio };
+      }
+    }
+  }
+
+  return { detected: false };
+}
+
+/**
+ * detectTooClose() — Phát hiện mắt/mặt quá gần màn hình
+ * Nguyên lý: Khi lại gần camera, mặt chiếm tỷ lệ lớn hơn trong khung hình.
+ *            Tính: rộng_mặt / rộng_canvas > ngưỡng → quá gần
+ */
+function detectTooClose(keypoints, canvasWidth) {
+  const leftEye  = keypoints[1];
+  const rightEye = keypoints[2];
+  const leftEar  = keypoints[3];
+  const rightEar = keypoints[4];
+  const minScore = POSE_THRESHOLDS.minKeypointScore;
+
+  let faceWidth = 0;
+
+  // Ưu tiên dùng khoảng cách tai (phản ánh kích thước mặt chính xác hơn)
+  if (leftEar.score > minScore && rightEar.score > minScore) {
+    faceWidth = Math.abs(leftEar.x - rightEar.x);
+  } else if (leftEye.score > minScore && rightEye.score > minScore) {
+    // Fallback: khoảng cách mắt × 2.5 ≈ chiều rộng mặt
+    faceWidth = Math.abs(leftEye.x - rightEye.x) * 2.5;
+  }
+
+  if (faceWidth === 0 || canvasWidth === 0) return { detected: false };
+
+  const faceRatio = faceWidth / canvasWidth;
+
+  if (faceRatio > POSE_THRESHOLDS.faceCloseRatio) {
+    const confidence = Math.min(0.95, 0.6 + (faceRatio - POSE_THRESHOLDS.faceCloseRatio) * 2.0);
+    return { detected: true, confidence, faceRatio };
+  }
+
+  return { detected: false, faceRatio };
+}
+
+// ============================================================
+// PHẦN 4b: SMOOTHING & PREDICTION FORMAT
+// ============================================================
+
+/**
+ * smoothPoseResult() — Lấy tư thế xuất hiện nhiều nhất trong N frame
+ * Tránh nhấp nháy: thay vì thay đổi mỗi frame, dùng "bỏ phiếu đa số"
+ */
+function smoothPoseResult(result) {
+  poseHistory.push(result);
+  if (poseHistory.length > POSE_SMOOTHING_FRAMES) {
+    poseHistory.shift();
+  }
+
+  // Đếm tần suất từng tư thế
+  const counts = {};
+  poseHistory.forEach(r => {
+    counts[r.name] = (counts[r.name] || 0) + 1;
+  });
+
+  // Tìm tư thế xuất hiện nhiều nhất
+  let maxCount = 0;
+  let dominantPose = result.name;
+  Object.entries(counts).forEach(([name, count]) => {
+    if (count > maxCount) {
+      maxCount = count;
+      dominantPose = name;
+    }
+  });
+
+  // Tính confidence trung bình của tư thế dominant
+  const dominantResults = poseHistory.filter(r => r.name === dominantPose);
+  const avgConfidence = dominantResults.reduce((sum, r) => sum + r.confidence, 0) / dominantResults.length;
+
+  return { name: dominantPose, confidence: avgConfidence };
+}
+
+/**
+ * buildPrediction() — Tạo mảng prediction tương thích với updateUI()
+ * Format giống Teachable Machine: [{className, probability}, ...]
+ */
+function buildPrediction(result) {
+  const poseNames = Object.keys(POSE_CONFIG);
+  const remainingProb = (1 - result.confidence) / Math.max(1, poseNames.length - 1);
+
+  return poseNames.map(name => ({
+    className: name,
+    probability: name === result.name ? result.confidence : remainingProb,
+  }));
+}
+
+// ============================================================
+// PHẦN 4c: VẼ CAMERA + SKELETON LÊN CANVAS
+// ============================================================
+
+/**
+ * drawFrame() — Vẽ hình ảnh webcam + skeleton lên canvas
+ */
+function drawFrame(poses) {
+  if (!ctx || !video) return;
+
+  const w = ctx.canvas.width;
+  const h = ctx.canvas.height;
+
+  // Flip ngang (mirror) để người dùng thấy tự nhiên như soi gương
+  ctx.save();
+  ctx.translate(w, 0);
+  ctx.scale(-1, 1);
+  ctx.drawImage(video, 0, 0, w, h);
+  ctx.restore();
+
+  // Vẽ skeleton nếu phát hiện người
+  if (poses.length > 0) {
+    const keypoints = poses[0].keypoints;
+    drawKeypoints(keypoints, w);
+    drawSkeleton(keypoints, w);
+  }
+}
+
+/**
+ * drawKeypoints() — Vẽ các điểm khớp (chấm tròn) lên canvas
+ */
+function drawKeypoints(keypoints, canvasWidth) {
+  const minScore = POSE_THRESHOLDS.minKeypointScore;
+
+  keypoints.forEach(kp => {
+    if (kp.score > minScore) {
+      // Flip x vì canvas đã mirror
+      const x = canvasWidth - kp.x;
+      const y = kp.y;
+
+      ctx.beginPath();
+      ctx.arc(x, y, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = "#00ff88";
+      ctx.fill();
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+  });
+}
+
+/**
+ * drawSkeleton() — Vẽ đường xương nối các keypoint
+ */
+function drawSkeleton(keypoints, canvasWidth) {
+  const minScore = POSE_THRESHOLDS.minKeypointScore;
+
+  SKELETON_CONNECTIONS.forEach(([i, j]) => {
+    const kp1 = keypoints[i];
+    const kp2 = keypoints[j];
+
+    if (kp1.score > minScore && kp2.score > minScore) {
+      // Flip x
+      const x1 = canvasWidth - kp1.x;
+      const y1 = kp1.y;
+      const x2 = canvasWidth - kp2.x;
+      const y2 = kp2.y;
+
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.strokeStyle = "#00d4ff";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  });
 }
 
 // ============================================================
@@ -754,7 +1092,7 @@ function initPoseResultBars() {
 
 /**
  * sanitizeId() — Chuyển tên tư thế thành ID hợp lệ (không dấu, không khoảng trắng)
- * Ví dụ: "Cúi đầu" → "Ci-u-u"  (dùng cho id HTML)
+ * Ví dụ: "Cúi đầu" → "Cui-dau"  (dùng cho id HTML)
  */
 function sanitizeId(name) {
   return name
@@ -769,16 +1107,10 @@ function sanitizeId(name) {
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Kiểm tra cấu hình model
-  if (MODEL_URL.includes("THAY_URL_CUA_BAN")) {
-    console.warn("⚠️ Bạn chưa thay URL model! Hãy cập nhật biến MODEL_URL trong script.js");
-    document.getElementById("status-label").textContent = "⚠️ Chưa cấu hình Model URL";
-    document.getElementById("status-label").style.color = "var(--accent-yellow)";
-  }
-
   // Vẽ biểu đồ trống để giao diện không bị trống
   initCharts();
   updatePomodoroDisplay();
 
-  console.log("🚀 PoseAlert đã khởi động! Nhấn 'Bắt đầu' để sử dụng.");
+  console.log("🚀 PoseAlert đã khởi động! (MoveNet Pose Estimation)");
+  console.log("📋 Nhấn 'Bắt đầu' để sử dụng. Không cần URL model!");
 });
