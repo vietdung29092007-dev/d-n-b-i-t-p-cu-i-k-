@@ -292,7 +292,7 @@ body::before {
   height: 100%; width: 0%;
   background: linear-gradient(90deg, var(--accent-green), var(--accent-yellow), var(--accent-red));
   border-radius: 99px;
-  transition: width 1s linear;
+  transition: width 1s linear;background-color: 0,3s;
 }
 
 .timer-countdown {
