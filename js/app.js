@@ -14,19 +14,60 @@
 /**
  * startApp()
  * Được gọi khi người dùng nhấn nút "▶ Bắt đầu".
- * Thứ tự: tải MoveNet → bật camera → thiết lập canvas → khởi UI → vào vòng lặp
+ * Thứ tự: hiện loading → tải MoveNet → bật camera → thiết lập canvas → khởi UI → vào vòng lặp
  */
 async function startApp() {
+  const loadingEl = document.getElementById("ai-loading");
+  const overlayEl = document.getElementById("camera-overlay");
+  const barEl     = document.getElementById("ai-loading-bar");
+  const labelEl   = document.getElementById("ai-loading-label");
+  const subEl     = document.getElementById("ai-loading-sub");
+
+  // Helpers cập nhật UI loading
+  const setLabel = (text, sub) => {
+    labelEl.textContent = text;
+    if (sub !== undefined) subEl.textContent = sub;
+  };
+  const setBar = pct => { barEl.style.width = pct + "%"; };
+  const setStep = (id, state) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.className = "ai-step " + state;
+    const icons = { done: "✅", active: "⏳", "": "⬜" };
+    el.textContent = el.textContent.replace(/^[✅⏳⬜]\s/, (icons[state] || "⬜") + " ");
+  };
+
+  // Ẩn overlay mặc định, hiện loading
+  overlayEl.classList.add("hidden");
+  loadingEl.classList.remove("hidden");
+  setBar(5);
   updateStatus("Đang tải model AI...", "");
+
   try {
-    // 1. Tải MoveNet SINGLEPOSE_LIGHTNING (nhanh, phù hợp realtime)
+    // ── BƯỚC 1: TensorFlow.js + MoveNet detector ──
+    setStep("step-tfjs", "active");
+    setLabel("Khởi tạo TensorFlow.js...", "Có thể mất 5 – 10 giây lần đầu");
+
     detector = await poseDetection.createDetector(
       poseDetection.SupportedModels.MoveNet,
       { modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING }
     );
     console.log("✅ MoveNet model đã tải xong!");
 
-    // 2. Khởi động webcam qua getUserMedia
+    setStep("step-tfjs", "done");
+    setBar(38);
+
+    // ── BƯỚC 2: Nạp trọng số model (hoàn tất cùng detector, dừng nhịp UI) ──
+    setStep("step-model", "active");
+    setLabel("Nạp trọng số mô hình...", "Đang xử lý...");
+    await new Promise(r => setTimeout(r, 320));
+    setStep("step-model", "done");
+    setBar(65);
+
+    // ── BƯỚC 3: Khởi động camera ──
+    setStep("step-cam", "active");
+    setLabel("Kết nối camera...", "Hãy cho phép truy cập camera");
+
     video       = document.getElementById("webcam-video");
     mediaStream = await navigator.mediaDevices.getUserMedia({
       video: { width: 640, height: 480, facingMode: "user" },
@@ -39,29 +80,36 @@ async function startApp() {
     });
     console.log("✅ Camera đã khởi động!");
 
-    // 3. Thiết lập canvas
+    setStep("step-cam", "done");
+    setBar(100);
+    setLabel("Sẵn sàng!", "");
+
+    // Dừng nhịp để người dùng thấy trạng thái "Sẵn sàng"
+    await new Promise(r => setTimeout(r, 420));
+
+    // Ẩn loading
+    loadingEl.classList.add("hidden");
+
+    // ── Thiết lập canvas ──
     const canvas  = document.getElementById("canvas");
     canvas.width  = video.videoWidth  || 640;
     canvas.height = video.videoHeight || 480;
     ctx           = canvas.getContext("2d");
 
-    // 4. Ẩn overlay "chờ khởi động"
-    document.getElementById("camera-overlay").classList.add("hidden");
-
-    // 5. Khởi tạo UI và biểu đồ
+    // ── Khởi tạo UI & biểu đồ ──
     initPoseResultBars();
     initCharts();
 
-    // 6. Bắt đầu đo thống kê và biểu đồ đường
+    // ── Bắt đầu thống kê ──
     stats.sessionStartTime = new Date();
     startStatTracking();
     startLineChartTracking();
 
-    // 7. Đổi nút Bắt đầu → Dừng
+    // ── Đổi nút Bắt đầu → Dừng ──
     document.getElementById("btn-start").classList.add("hidden");
     document.getElementById("btn-stop").classList.remove("hidden");
 
-    // 8. Reset smoothing buffer và khởi động vòng lặp
+    // ── Vào vòng lặp nhận diện ──
     poseHistory = [];
     isRunning   = true;
     updateStatus("Đang nhận diện...", "active");
@@ -69,14 +117,34 @@ async function startApp() {
 
   } catch (err) {
     console.error("❌ Lỗi khởi động:", err);
-    updateStatus("Lỗi! Kiểm tra camera.", "");
-    alert(
-      "Không thể khởi động!\n\n" +
-      "Lý do: " + err.message + "\n\n" +
-      "Hãy kiểm tra:\n" +
-      "1. Cho phép truy cập camera\n" +
-      "2. Kết nối internet để tải model"
-    );
+
+    // Reset icon các bước còn đang "active"
+    ["step-tfjs", "step-model", "step-cam"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && el.classList.contains("active")) setStep(id, "");
+    });
+
+    // Ẩn loading, hiện lại overlay với thông báo lỗi thân thiện
+    loadingEl.classList.add("hidden");
+    overlayEl.classList.remove("hidden");
+
+    let errMsg = "Có lỗi xảy ra. Hãy thử lại.";
+    if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
+      errMsg = "Bạn đã từ chối quyền camera.\nVào Settings trình duyệt để cấp lại quyền.";
+    } else if (err.name === "NotFoundError") {
+      errMsg = "Không tìm thấy camera.\nHãy kết nối webcam và thử lại.";
+    } else if (!navigator.onLine) {
+      errMsg = "Không có kết nối internet.\nModel AI cần tải lần đầu qua mạng.";
+    } else {
+      errMsg = "Lỗi: " + err.message;
+    }
+
+    const iconEl = document.querySelector(".camera-overlay .overlay-content .big-icon");
+    const msgEl  = document.querySelector(".camera-overlay .overlay-content p");
+    if (iconEl) iconEl.textContent = "❌";
+    if (msgEl)  msgEl.textContent  = errMsg;
+
+    updateStatus("Lỗi khởi động", "");
   }
 }
 

@@ -492,3 +492,100 @@ body::before {
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg-main); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+/* ---------- AI LOADING INDICATOR ---------- */
+.ai-loading {
+  position: absolute; inset: 0;
+  background: rgba(10, 14, 26, 0.93);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 0.55rem;
+  z-index: 10;
+  backdrop-filter: blur(4px);
+}
+
+/* Vòng xoay */
+.ai-loading-ring {
+  position: relative;
+  width: 68px; height: 68px;
+  margin-bottom: 0.15rem;
+}
+.ai-loading-ring svg {
+  width: 68px; height: 68px;
+  animation: ai-spin 1.5s linear infinite;
+}
+@keyframes ai-spin {
+  to { transform: rotate(360deg); }
+}
+.ai-loading-arc {
+  transform-origin: center;
+  animation: ai-dash 1.5s ease-in-out infinite;
+}
+@keyframes ai-dash {
+  0%   { stroke-dasharray: 10 153; stroke-dashoffset: 0; }
+  50%  { stroke-dasharray: 100 63; stroke-dashoffset: -30; }
+  100% { stroke-dasharray: 10 153; stroke-dashoffset: -163; }
+}
+
+/* Icon não nhấp nháy giữa vòng xoay */
+.ai-loading-brain {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.45rem;
+  animation: ai-pulse-brain 1.5s ease-in-out infinite;
+}
+@keyframes ai-pulse-brain {
+  0%, 100% { opacity: 0.55; transform: translate(-50%, -50%) scale(0.88); }
+  50%       { opacity: 1;    transform: translate(-50%, -50%) scale(1.12); }
+}
+
+/* Nhãn chính */
+.ai-loading-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.76rem; font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+/* Nhãn phụ */
+.ai-loading-sub {
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  margin-top: -0.1rem;
+}
+
+/* Thanh tiến trình */
+.ai-loading-bar-wrap {
+  width: 152px; height: 3px;
+  background: var(--bg-card);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 0.2rem;
+}
+.ai-loading-bar {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-green));
+  border-radius: 99px;
+  transition: width 0.55s cubic-bezier(.4,0,.2,1);
+}
+
+/* 3 bước trạng thái */
+.ai-loading-steps {
+  display: flex; gap: 0.7rem;
+  flex-wrap: wrap; justify-content: center;
+  margin-top: 0.25rem;
+}
+.ai-step {
+  font-size: 0.63rem;
+  color: var(--text-secondary);
+  font-family: 'Space Mono', monospace;
+  transition: color 0.3s;
+}
+.ai-step.done   { color: var(--accent-green); }
+.ai-step.active { color: var(--accent); animation: ai-step-blink 0.9s infinite; }
+@keyframes ai-step-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}

@@ -48,6 +48,31 @@
         <canvas id="canvas"></canvas>
         <!-- Video ẩn: nguồn webcam cho MoveNet -->
         <video id="webcam-video" autoplay playsinline style="display:none;"></video>
+
+        <!-- ========== AI LOADING INDICATOR ========== -->
+        <div class="ai-loading hidden" id="ai-loading">
+          <div class="ai-loading-ring">
+            <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="30" cy="30" r="26" stroke="#1e2d47" stroke-width="4"/>
+              <circle cx="30" cy="30" r="26" stroke="#00d4ff" stroke-width="4"
+                stroke-linecap="round"
+                stroke-dasharray="50 113"
+                class="ai-loading-arc"/>
+            </svg>
+            <span class="ai-loading-brain">🧠</span>
+          </div>
+          <div class="ai-loading-label" id="ai-loading-label">Đang tải model AI...</div>
+          <div class="ai-loading-sub" id="ai-loading-sub">Lần đầu cần kết nối internet</div>
+          <div class="ai-loading-bar-wrap">
+            <div class="ai-loading-bar" id="ai-loading-bar"></div>
+          </div>
+          <div class="ai-loading-steps" id="ai-loading-steps">
+            <span class="ai-step" id="step-tfjs">⬜ TensorFlow.js</span>
+            <span class="ai-step" id="step-model">⬜ MoveNet model</span>
+            <span class="ai-step" id="step-cam">⬜ Camera</span>
+          </div>
+        </div>
+
         <div class="camera-overlay" id="camera-overlay">
           <div class="overlay-content">
             <div class="big-icon">📷</div>
