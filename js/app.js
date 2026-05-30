@@ -197,16 +197,21 @@ async function predictionLoop() {
 async function predict() {
   if (!detector || !video || video.readyState < 2) return;
 
-  const poses = await detector.estimatePoses(video);
+  try {
+    const poses = await detector.estimatePoses(video);
 
-  // Vẽ camera + skeleton lên canvas
-  drawFrame(poses);
+    // Vẽ camera + skeleton lên canvas
+    drawFrame(poses);
 
-  // Phân loại và cập nhật UI nếu phát hiện người
-  if (poses.length > 0) {
-    const raw      = classifyPose(poses[0].keypoints);
-    const smoothed = smoothPoseResult(raw);
-    updateUI(buildPrediction(smoothed));
+    // Phân loại và cập nhật UI nếu phát hiện người
+    if (poses.length > 0) {
+      const raw      = classifyPose(poses[0].keypoints);
+      const smoothed = smoothPoseResult(raw);
+      updateUI(buildPrediction(smoothed));
+    }
+  } catch (err) {
+    console.error("❌ Lỗi trong vòng lặp nhận diện:", err);
+    // Tiếp tục chạy, không dừng app
   }
 }
 
@@ -255,13 +260,33 @@ function buildPrediction(result) {
 }
 
 // ============================================================
+// GLOBAL ERROR HANDLER
+// ============================================================
+
+/**
+ * Global error handler cách ly các lỗi chưa bắt được
+ */
+window.addEventListener("error", (event) => {
+  console.error("🚨 GLOBAL ERROR:", event.error);
+  console.error("Stack:", event.error?.stack);
+});
+
+window.addEventListener("unhandledrejection", (event) => {
+  console.error("🚨 UNHANDLED PROMISE REJECTION:", event.reason);
+});
+
+// ============================================================
 // KHỞI CHẠY KHI TRANG TẢI XONG
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", () => {
-  initCharts();          // Vẽ biểu đồ trống để giao diện không bị trống
-  updatePomodoroDisplay(); // Hiển thị đồng hồ Pomodoro ban đầu (25:00)
+  try {
+    initCharts();          // Vẽ biểu đồ trống để giao diện không bị trống
+    updatePomodoroDisplay(); // Hiển thị đồng hồ Pomodoro ban đầu (25:00)
 
-  console.log("🚀 PoseAlert đã khởi động! (MoveNet Pose Estimation)");
-  console.log("📋 Nhấn 'Bắt đầu' để sử dụng — không cần URL model!");
+    console.log("🚀 PoseAlert đã khởi động! (MoveNet Pose Estimation)");
+    console.log("📋 Nhấn 'Bắt đầu' để sử dụng — không cần URL model!");
+  } catch (err) {
+    console.error("🚨 Lỗi khởi động DOMContentLoaded:", err);
+  }
 });

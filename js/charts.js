@@ -18,8 +18,12 @@
  * Gọi khi trang load và mỗi khi restart app.
  */
 function initCharts() {
-  initDoughnutChart();
-  initLineChart();
+  try {
+    initDoughnutChart();
+    initLineChart();
+  } catch (err) {
+    console.error("❌ Lỗi initCharts:", err);
+  }
 }
 
 // ------------------------------------------------------------
@@ -32,56 +36,76 @@ function initCharts() {
  * Destroy chart cũ nếu đã tồn tại (tránh lỗi "Canvas is already in use").
  */
 function initDoughnutChart() {
-  if (doughnutChart) {
-    doughnutChart.destroy();
-    doughnutChart = null;
-  }
+  try {
+    if (doughnutChart) {
+      doughnutChart.destroy();
+      doughnutChart = null;
+    }
 
-  const labels = Object.keys(POSE_CONFIG);
-  const colors = ["#00ff88", "#ff4757", "#ffd700", "#ff6b35"];
+    const canvasEl = document.getElementById("doughnut-chart");
+    if (!canvasEl) {
+      console.warn("⚠️ doughnut-chart element không tìm thấy");
+      return;
+    }
 
-  chartData.labels = labels;
-  chartData.colors = colors;
+    const labels = Object.keys(POSE_CONFIG || {});
+    const colors = ["#00ff88", "#ff4757", "#ffd700", "#ff6b35"];
 
-  const ctx2d = document.getElementById("doughnut-chart").getContext("2d");
+    chartData.labels = labels;
+    chartData.colors = colors;
 
-  doughnutChart = new Chart(ctx2d, {
-    type: "doughnut",
-    data: {
-      labels,
-      datasets: [{
-        data: [1, 0, 0, 0],
-        backgroundColor: colors,
-        borderColor: "#111827",
-        borderWidth: 3,
-        hoverOffset: 6,
-      }]
-    },
-    options: {
-      responsive: true,
-      cutout: "65%",
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: c => " " + c.label + ": " + c.parsed.toFixed(1) + "%"
+    const ctx2d = canvasEl.getContext("2d");
+    if (!ctx2d) {
+      console.error("❌ Không thể lấy 2D context từ doughnut-chart");
+      return;
+    }
+
+    doughnutChart = new Chart(ctx2d, {
+      type: "doughnut",
+      data: {
+        labels,
+        datasets: [{
+          data: [1, 0, 0, 0],
+          backgroundColor: colors,
+          borderColor: "#111827",
+          borderWidth: 3,
+          hoverOffset: 6,
+        }]
+      },
+      options: {
+        responsive: true,
+        cutout: "65%",
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: c => " " + c.label + ": " + (c.parsed || 0).toFixed(1) + "%"
+            }
           }
         }
       }
-    }
-  });
+    });
 
-  // Vẽ legend tùy chỉnh (xóa cũ trước để tránh trùng khi restart)
-  const legendEl = document.getElementById("chart-legend");
-  legendEl.innerHTML = "";
-  labels.forEach((label, i) => {
-    const item = document.createElement("div");
-    item.className = "legend-item";
-    item.innerHTML =
-      '<div class="legend-dot" style="background:' + colors[i] + '"></div>' +
-      "<span>" + label + "</span>";
-    legendEl.appendChild(item);
-  });
+    // Vẽ legend tùy chỉnh (xóa cũ trước để tránh trùng khi restart)
+    const legendEl = document.getElementById("chart-legend");
+    if (legendEl) {
+      legendEl.innerHTML = "";
+      labels.forEach((label, i) => {
+        try {
+          const item = document.createElement("div");
+          item.className = "legend-item";
+          item.innerHTML =
+            '<div class="legend-dot" style="background:' + (colors[i] || "#ccc") + '"></div>' +
+            "<span>" + label + "</span>";
+          legendEl.appendChild(item);
+        } catch (itemErr) {
+          console.error("❌ Lỗi tạo legend item:", itemErr);
+        }
+      });
+    }
+  } catch (err) {
+    console.error("❌ Lỗi initDoughnutChart:", err);
+  }
 }
 
 /**
@@ -90,18 +114,24 @@ function initDoughnutChart() {
  * Phân chia badPct đều cho 3 loại tư thế sai.
  */
 function updateDoughnutChart() {
-  if (!doughnutChart || stats.totalSeconds === 0) return;
+  try {
+    if (!doughnutChart || !stats || stats.totalSeconds === 0) return;
 
-  const goodPct = (stats.goodSeconds / stats.totalSeconds) * 100;
-  const badPct  = 100 - goodPct;
+    const goodPct = (stats.goodSeconds / stats.totalSeconds) * 100;
+    const badPct  = 100 - goodPct;
 
-  doughnutChart.data.datasets[0].data = [
-    goodPct,
-    badPct / 3,
-    badPct / 3,
-    badPct / 3,
-  ];
-  doughnutChart.update("none"); // Không animation để tránh giật
+    if (doughnutChart.data && doughnutChart.data.datasets && doughnutChart.data.datasets[0]) {
+      doughnutChart.data.datasets[0].data = [
+        goodPct,
+        badPct / 3,
+        badPct / 3,
+        badPct / 3,
+      ];
+      doughnutChart.update("none"); // Không animation để tránh giật
+    }
+  } catch (err) {
+    console.error("❌ Lỗi updateDoughnutChart:", err);
+  }
 }
 
 // ------------------------------------------------------------
@@ -114,40 +144,51 @@ function updateDoughnutChart() {
  * Destroy chart cũ và reset dữ liệu nếu cần.
  */
 function initLineChart() {
-  if (lineChart) {
-    lineChart.destroy();
-    lineChart = null;
-  }
-  lineChartLabels.length = 0;
-  lineChartData.length   = 0;
+  try {
+    if (lineChart) {
+      lineChart.destroy();
+      lineChart = null;
+    }
+    lineChartLabels.length = 0;
+    lineChartData.length   = 0;
 
-  const ctx2d = document.getElementById("line-chart").getContext("2d");
+    const canvasEl = document.getElementById("line-chart");
+    if (!canvasEl) {
+      console.warn("⚠️ line-chart element không tìm thấy");
+      return;
+    }
 
-  lineChart = new Chart(ctx2d, {
-    type: "line",
-    data: {
-      labels: lineChartLabels,
-      datasets: [{
-        label: "% Ngồi đúng",
-        data: lineChartData,
-        borderColor: "#00ff88",
-        backgroundColor: "rgba(0,255,136,0.1)",
-        borderWidth: 2,
-        fill: true,
-        tension: 0.4,
-        pointRadius: 2,
-        pointBackgroundColor: "#00ff88",
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        y: {
-          min: 0, max: 100,
-          ticks: { color: "#7986a3", font: { size: 10 }, callback: v => v + "%" },
-          grid:  { color: "rgba(255,255,255,0.05)" },
-        },
+    const ctx2d = canvasEl.getContext("2d");
+    if (!ctx2d) {
+      console.error("❌ Không thể lấy 2D context từ line-chart");
+      return;
+    }
+
+    lineChart = new Chart(ctx2d, {
+      type: "line",
+      data: {
+        labels: lineChartLabels,
+        datasets: [{
+          label: "% Ngồi đúng",
+          data: lineChartData,
+          borderColor: "#00ff88",
+          backgroundColor: "rgba(0,255,136,0.1)",
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 2,
+          pointBackgroundColor: "#00ff88",
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            min: 0, max: 100,
+            ticks: { color: "#7986a3", font: { size: 10 }, callback: v => v + "%" },
+            grid:  { color: "rgba(255,255,255,0.05)" },
+          },
         x: {
           ticks: { color: "#7986a3", font: { size: 9 }, maxRotation: 0 },
           grid:  { color: "rgba(255,255,255,0.05)" },
@@ -155,7 +196,10 @@ function initLineChart() {
       },
       plugins: { legend: { display: false } }
     }
-  });
+    });
+  } catch (err) {
+    console.error("❌ Lỗi initLineChart:", err);
+  }
 }
 
 /**
@@ -163,25 +207,35 @@ function initLineChart() {
  * Thêm điểm dữ liệu mỗi 5 giây, giữ tối đa 20 điểm gần nhất.
  */
 function startLineChartTracking() {
-  lineDataInterval = setInterval(() => {
-    if (!isRunning) return;
+  try {
+    lineDataInterval = setInterval(() => {
+      try {
+        if (!isRunning || !stats) return;
 
-    const goodPct = stats.totalSeconds > 0
-      ? Math.round((stats.goodSeconds / stats.totalSeconds) * 100) : 0;
+        const goodPct = stats.totalSeconds > 0
+          ? Math.round((stats.goodSeconds / stats.totalSeconds) * 100) : 0;
 
-    const e = stats.totalSeconds;
-    const m = Math.floor(e / 60).toString().padStart(2, "0");
-    const s = (e % 60).toString().padStart(2, "0");
+        const e = stats.totalSeconds || 0;
+        const m = Math.floor(e / 60).toString().padStart(2, "0");
+        const s = (e % 60).toString().padStart(2, "0");
 
-    lineChartLabels.push(m + ":" + s);
-    lineChartData.push(goodPct);
+        lineChartLabels.push(m + ":" + s);
+        lineChartData.push(goodPct);
 
-    // Giữ tối đa 20 điểm
-    if (lineChartLabels.length > 20) {
-      lineChartLabels.shift();
-      lineChartData.shift();
-    }
+        // Giữ tối đa 20 điểm
+        if (lineChartLabels.length > 20) {
+          lineChartLabels.shift();
+          lineChartData.shift();
+        }
 
-    lineChart.update("none");
-  }, 5000);
+        if (lineChart) {
+          lineChart.update("none");
+        }
+      } catch (err) {
+        console.error("❌ Lỗi trong vòng lặp startLineChartTracking:", err);
+      }
+    }, 5000);
+  } catch (err) {
+    console.error("❌ Lỗi startLineChartTracking:", err);
+  }
 }

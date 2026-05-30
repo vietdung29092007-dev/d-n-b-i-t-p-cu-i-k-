@@ -15,21 +15,30 @@
  * - Cập nhật biểu đồ tròn
  */
 function startStatTracking() {
-  setInterval(() => {
-    if (!isRunning) return;
+  try {
+    setInterval(() => {
+      try {
+        if (!isRunning) return;
 
-    stats.totalSeconds++;
-    updateSessionClock();
+        if (stats) {
+          stats.totalSeconds++;
+          if (currentPoseIsGood) {
+            stats.goodSeconds++;
+          } else {
+            stats.badSeconds++;
+          }
+        }
 
-    if (currentPoseIsGood) {
-      stats.goodSeconds++;
-    } else {
-      stats.badSeconds++;
-    }
-
-    updateStatDisplay();
-    updateDoughnutChart();
-  }, 1000);
+        updateSessionClock();
+        updateStatDisplay();
+        updateDoughnutChart();
+      } catch (err) {
+        console.error("❌ Lỗi trong vòng lặp startStatTracking:", err);
+      }
+    }, 1000);
+  } catch (err) {
+    console.error("❌ Lỗi startStatTracking:", err);
+  }
 }
 
 /**
@@ -37,10 +46,18 @@ function startStatTracking() {
  * Cập nhật 3 thẻ số liệu: % ngồi đúng, % tư thế sai, số lần cảnh báo.
  */
 function updateStatDisplay() {
-  const goodPct = stats.totalSeconds > 0
-    ? Math.round((stats.goodSeconds / stats.totalSeconds) * 100) : 0;
+  try {
+    const goodPct = (stats && stats.totalSeconds > 0)
+      ? Math.round((stats.goodSeconds / stats.totalSeconds) * 100) : 0;
 
-  document.getElementById("stat-good").textContent   = goodPct + "%";
-  document.getElementById("stat-bad").textContent    = (100 - goodPct) + "%";
-  document.getElementById("stat-alerts").textContent = stats.alertCount;
+    const statGoodEl = document.getElementById("stat-good");
+    const statBadEl = document.getElementById("stat-bad");
+    const statAlertsEl = document.getElementById("stat-alerts");
+
+    if (statGoodEl) statGoodEl.textContent = goodPct + "%";
+    if (statBadEl) statBadEl.textContent = (100 - goodPct) + "%";
+    if (statAlertsEl) statAlertsEl.textContent = (stats && stats.alertCount) || 0;
+  } catch (err) {
+    console.error("❌ Lỗi updateStatDisplay:", err);
+  }
 }

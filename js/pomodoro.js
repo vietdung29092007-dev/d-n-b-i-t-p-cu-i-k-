@@ -62,16 +62,23 @@ function resetPomodoro() {
  * Cập nhật đồng hồ MM:SS và nhãn phase (học/nghỉ).
  */
 function updatePomodoroDisplay() {
-  const m = Math.floor(pomodoroSeconds / 60).toString().padStart(2, "0");
-  const s = (pomodoroSeconds % 60).toString().padStart(2, "0");
+  try {
+    const m = Math.floor((pomodoroSeconds || 0) / 60).toString().padStart(2, "0");
+    const s = ((pomodoroSeconds || 0) % 60).toString().padStart(2, "0");
 
-  document.getElementById("pomodoro-time").textContent  = m + ":" + s;
-  document.getElementById("pomodoro-phase").textContent =
-    pomodoroIsWork ? "🎯 Tập trung học" : "☕ Nghỉ ngơi";
+    const pomodoroTimeEl = document.getElementById("pomodoro-time");
+    const pomodoroPhaseEl = document.getElementById("pomodoro-phase");
 
-  // Đổi màu theo phase: cam (học) / xanh lá (nghỉ)
-  document.getElementById("pomodoro-time").style.color =
-    pomodoroIsWork ? "var(--accent-orange)" : "var(--accent-green)";
+    if (pomodoroTimeEl) {
+      pomodoroTimeEl.textContent = m + ":" + s;
+      pomodoroTimeEl.style.color = pomodoroIsWork ? "var(--accent-orange)" : "var(--accent-green)";
+    }
+    if (pomodoroPhaseEl) {
+      pomodoroPhaseEl.textContent = pomodoroIsWork ? "🎯 Tập trung học" : "☕ Nghỉ ngơi";
+    }
+  } catch (err) {
+    console.error("❌ Lỗi updatePomodoroDisplay:", err);
+  }
 }
 
 /**
@@ -79,9 +86,17 @@ function updatePomodoroDisplay() {
  * Hiện popup thông báo hết giờ (dùng lại popup cảnh báo tư thế).
  */
 function showPomodoroAlert(title, message) {
-  document.getElementById("alert-title").textContent   = title;
-  document.getElementById("alert-message").textContent = message;
-  document.getElementById("alert-overlay").classList.remove("hidden");
+  try {
+    const alertTitleEl = document.getElementById("alert-title");
+    const alertMessageEl = document.getElementById("alert-message");
+    const alertOverlayEl = document.getElementById("alert-overlay");
+
+    if (alertTitleEl) alertTitleEl.textContent = title || "Thông báo";
+    if (alertMessageEl) alertMessageEl.textContent = message || "";
+    if (alertOverlayEl) alertOverlayEl.classList.remove("hidden");
+  } catch (err) {
+    console.error("❌ Lỗi showPomodoroAlert:", err);
+  }
 }
 
 // ------------------------------------------------------------

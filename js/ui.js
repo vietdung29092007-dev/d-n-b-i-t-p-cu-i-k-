@@ -18,46 +18,64 @@
  * @param {Array} prediction - [{className, probability}, ...]
  */
 function updateUI(prediction) {
-  // Tìm tư thế có xác suất cao nhất
-  const maxPose = prediction.reduce((best, p) =>
-    p.probability > best.probability ? p : best
-  , prediction[0]);
+  try {
+    // Validation
+    if (!prediction || !Array.isArray(prediction) || prediction.length === 0) {
+      console.warn("⚠️ updateUI: prediction không hợp lệ");
+      return;
+    }
 
-  const poseName   = maxPose.className;
-  const poseConf   = Math.round(maxPose.probability * 100);
-  const poseInfo   = POSE_CONFIG[poseName] || { icon: "❓", isGood: true };
-  const isGoodPose = poseInfo.isGood;
+    // Tìm tư thế có xác suất cao nhất
+    const maxPose = prediction.reduce((best, p) =>
+      p.probability > best.probability ? p : best
+    , prediction[0]);
 
-  // Lưu tư thế hiện tại vào state toàn cục
-  currentPoseName   = poseName;
-  currentPoseIsGood = isGoodPose;
+    const poseName   = maxPose.className || "Không xác định";
+    const poseConf   = Math.round((maxPose.probability || 0) * 100);
+    const poseInfo   = POSE_CONFIG[poseName] || { icon: "❓", isGood: true };
+    const isGoodPose = poseInfo.isGood;
 
-  // Cập nhật khối hiển thị tư thế lớn (giữa màn hình)
-  const display = document.querySelector(".current-pose-display");
-  document.getElementById("pose-icon").textContent       = poseInfo.icon || "❓";
-  document.getElementById("pose-name").textContent       = poseName;
-  document.getElementById("pose-confidence").textContent = poseConf + "%";
-  display.classList.remove("state-good", "state-bad");
-  display.classList.add(isGoodPose ? "state-good" : "state-bad");
+    // Lưu tư thế hiện tại vào state toàn cục
+    currentPoseName   = poseName;
+    currentPoseIsGood = isGoodPose;
 
-  // Cập nhật đèn trạng thái ở header
-  document.getElementById("status-dot").className =
-    "status-dot " + (isGoodPose ? "active" : "warning");
+    // Cập nhật khối hiển thị tư thế lớn (giữa màn hình) - kiểm tra trước
+    const poseIconEl = document.getElementById("pose-icon");
+    const poseNameEl = document.getElementById("pose-name");
+    const poseConfEl = document.getElementById("pose-confidence");
+    const display    = document.querySelector(".current-pose-display");
 
-  // Cập nhật các thanh % bên dưới camera
-  prediction.forEach(p => {
-    const pct    = Math.round(p.probability * 100);
-    const fillEl = document.getElementById("bar-fill-" + sanitizeId(p.className));
-    const pctEl  = document.getElementById("bar-pct-"  + sanitizeId(p.className));
-    if (fillEl) fillEl.style.width  = pct + "%";
-    if (pctEl)  pctEl.textContent   = pct + "%";
-  });
+    if (poseIconEl) poseIconEl.textContent = poseInfo.icon || "❓";
+    if (poseNameEl) poseNameEl.textContent = poseName;
+    if (poseConfEl) poseConfEl.textContent = poseConf + "%";
+    if (display) {
+      display.classList.remove("state-good", "state-bad");
+      display.classList.add(isGoodPose ? "state-good" : "state-bad");
+    }
 
-  // Kích hoạt hoặc reset timer cảnh báo
-  if (!isGoodPose) {
-    startBadPoseTimer(poseName);
-  } else {
-    resetBadPoseTimer();
+    // Cập nhật đèn trạng thái ở header
+    const statusDot = document.getElementById("status-dot");
+    if (statusDot) {
+      statusDot.className = "status-dot " + (isGoodPose ? "active" : "warning");
+    }
+
+    // Cập nhật các thanh % bên dưới camera
+    prediction.forEach(p => {
+      const pct    = Math.round((p.probability || 0) * 100);
+      const fillEl = document.getElementById("bar-fill-" + sanitizeId(p.className));
+      const pctEl  = document.getElementById("bar-pct-"  + sanitizeId(p.className));
+      if (fillEl) fillEl.style.width  = pct + "%";
+      if (pctEl)  pctEl.textContent   = pct + "%";
+    });
+
+    // Kích hoạt hoặc reset timer cảnh báo
+    if (!isGoodPose) {
+      startBadPoseTimer(poseName);
+    } else {
+      resetBadPoseTimer();
+    }
+  } catch (err) {
+    console.error("❌ Lỗi updateUI:", err);
   }
 }
 
@@ -70,8 +88,14 @@ function updateUI(prediction) {
  * Thay đổi văn bản và màu đèn trạng thái ở header
  */
 function updateStatus(text, dotClass) {
-  document.getElementById("status-label").textContent = text;
-  document.getElementById("status-dot").className     = "status-dot " + dotClass;
+  try {
+    const statusLabel = document.getElementById("status-label");
+    const statusDot = document.getElementById("status-dot");
+    if (statusLabel) statusLabel.textContent = text;
+    if (statusDot) statusDot.className = "status-dot " + (dotClass || "");
+  } catch (err) {
+    console.error("❌ Lỗi updateStatus:", err);
+  }
 }
 
 /**
@@ -79,11 +103,18 @@ function updateStatus(text, dotClass) {
  * Cập nhật đồng hồ phiên HH:MM:SS ở góc trên header
  */
 function updateSessionClock() {
-  const e = stats.totalSeconds;
-  const h = Math.floor(e / 3600).toString().padStart(2, "0");
-  const m = Math.floor((e % 3600) / 60).toString().padStart(2, "0");
-  const s = (e % 60).toString().padStart(2, "0");
-  document.getElementById("session-time").textContent = "Phiên: " + h + ":" + m + ":" + s;
+  try {
+    const e = stats.totalSeconds || 0;
+    const h = Math.floor(e / 3600).toString().padStart(2, "0");
+    const m = Math.floor((e % 3600) / 60).toString().padStart(2, "0");
+    const s = (e % 60).toString().padStart(2, "0");
+    const sessionTimeEl = document.getElementById("session-time");
+    if (sessionTimeEl) {
+      sessionTimeEl.textContent = "Phiên: " + h + ":" + m + ":" + s;
+    }
+  } catch (err) {
+    console.error("❌ Lỗi updateSessionClock:", err);
+  }
 }
 
 // ------------------------------------------------------------
@@ -96,22 +127,31 @@ function updateSessionClock() {
  * Mục mới nhất xuất hiện trên cùng.
  */
 function addAlertLog(poseName) {
-  const logEl   = document.getElementById("alert-log");
-  const emptyEl = logEl.querySelector(".log-empty");
-  if (emptyEl) emptyEl.remove();
+  try {
+    const logEl   = document.getElementById("alert-log");
+    if (!logEl) {
+      console.warn("⚠️ alert-log element không tìm thấy");
+      return;
+    }
 
-  const now     = new Date();
-  const timeStr = now.getHours().toString().padStart(2, "0") + ":" +
-                  now.getMinutes().toString().padStart(2, "0") + ":" +
-                  now.getSeconds().toString().padStart(2, "0");
+    const emptyEl = logEl.querySelector(".log-empty");
+    if (emptyEl) emptyEl.remove();
 
-  const item = document.createElement("div");
-  item.className = "log-item";
-  item.innerHTML =
-    "<span>" + poseName + "</span>" +
-    '<span class="log-time">' + timeStr + "</span>";
+    const now     = new Date();
+    const timeStr = now.getHours().toString().padStart(2, "0") + ":" +
+                    now.getMinutes().toString().padStart(2, "0") + ":" +
+                    now.getSeconds().toString().padStart(2, "0");
 
-  logEl.insertBefore(item, logEl.firstChild);
+    const item = document.createElement("div");
+    item.className = "log-item";
+    item.innerHTML =
+      "<span>" + (poseName || "Không xác định") + "</span>" +
+      '<span class="log-time">' + timeStr + "</span>";
+
+    logEl.insertBefore(item, logEl.firstChild);
+  } catch (err) {
+    console.error("❌ Lỗi addAlertLog:", err);
+  }
 }
 
 // ------------------------------------------------------------
@@ -124,23 +164,35 @@ function addAlertLog(poseName) {
  * Gọi một lần khi app bắt đầu (hoặc khi restart).
  */
 function initPoseResultBars() {
-  const container = document.getElementById("pose-results");
-  container.innerHTML = "";
+  try {
+    const container = document.getElementById("pose-results");
+    if (!container) {
+      console.warn("⚠️ pose-results element không tìm thấy");
+      return;
+    }
+    container.innerHTML = "";
 
-  Object.entries(POSE_CONFIG).forEach(([name, config]) => {
-    const id   = sanitizeId(name);
-    const item = document.createElement("div");
-    item.className = "pose-bar-item";
-    item.innerHTML = `
-      <div class="pose-bar-header">
-        <span class="pose-bar-label">${config.icon} ${name}</span>
-        <span class="pose-bar-pct" id="bar-pct-${id}">0%</span>
-      </div>
-      <div class="pose-bar-track">
-        <div class="pose-bar-fill ${config.barClass}" id="bar-fill-${id}" style="width:0%"></div>
-      </div>`;
-    container.appendChild(item);
-  });
+    Object.entries(POSE_CONFIG).forEach(([name, config]) => {
+      try {
+        const id   = sanitizeId(name);
+        const item = document.createElement("div");
+        item.className = "pose-bar-item";
+        item.innerHTML = `
+          <div class="pose-bar-header">
+            <span class="pose-bar-label">${config.icon || ""} ${name}</span>
+            <span class="pose-bar-pct" id="bar-pct-${id}">0%</span>
+          </div>
+          <div class="pose-bar-track">
+            <div class="pose-bar-fill ${config.barClass || ""}" id="bar-fill-${id}" style="width:0%"></div>
+          </div>`;
+        container.appendChild(item);
+      } catch (itemErr) {
+        console.error("❌ Lỗi tạo thanh tư thế cho", name, ":", itemErr);
+      }
+    });
+  } catch (err) {
+    console.error("❌ Lỗi initPoseResultBars:", err);
+  }
 }
 
 // ------------------------------------------------------------
@@ -161,15 +213,24 @@ function sanitizeId(name) {
 }
 // Bật/tắt chế độ giấu mặt
 function togglePrivacy() {
-  isPrivacyMode = !isPrivacyMode;
-  const btn = document.getElementById("btn-privacy");
-  if (isPrivacyMode) {
-    btn.style.background = "var(--accent-green)";
-    btn.style.color = "#000";
-    btn.textContent = "🕵️ Đã giấu mặt";
-  } else {
-    btn.style.background = "#374151";
-    btn.style.color = "white";
-    btn.textContent = "👻 Bảo mật";
+  try {
+    isPrivacyMode = !isPrivacyMode;
+    const btn = document.getElementById("btn-privacy");
+    if (!btn) {
+      console.warn("⚠️ btn-privacy element không tìm thấy");
+      return;
+    }
+    
+    if (isPrivacyMode) {
+      btn.style.background = "var(--accent-green)";
+      btn.style.color = "#000";
+      btn.textContent = "🕵️ Đã giấu mặt";
+    } else {
+      btn.style.background = "#374151";
+      btn.style.color = "white";
+      btn.textContent = "👻 Bảo mật";
+    }
+  } catch (err) {
+    console.error("❌ Lỗi togglePrivacy:", err);
   }
 }

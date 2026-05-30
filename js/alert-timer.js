@@ -17,23 +17,35 @@
  * liên tục ngồi sai → kích hoạt cảnh báo và reset về 0.
  */
 function startBadPoseTimer(poseName) {
-  if (badPoseInterval) return; // Đã đang chạy, không chạy lại
+  try {
+    if (badPoseInterval) return; // Đã đang chạy, không chạy lại
 
-  badPoseInterval = setInterval(() => {
-    badPoseTimer++;
+    badPoseInterval = setInterval(() => {
+      try {
+        badPoseTimer++;
 
-    // Cập nhật thanh tiến độ và nhãn đếm ngược
-    const pct = (badPoseTimer / BAD_POSE_ALERT_SECONDS) * 100;
-    document.getElementById("timer-bar").style.width           = pct + "%";
-    document.getElementById("timer-countdown").textContent     =
-      badPoseTimer + " / " + BAD_POSE_ALERT_SECONDS + " giây";
+        // Cập nhật thanh tiến độ và nhãn đếm ngược
+        const pct = (badPoseTimer / (BAD_POSE_ALERT_SECONDS || 30)) * 100;
+        const timerBar = document.getElementById("timer-bar");
+        const timerCountdown = document.getElementById("timer-countdown");
+        
+        if (timerBar) timerBar.style.width = pct + "%";
+        if (timerCountdown) {
+          timerCountdown.textContent = badPoseTimer + " / " + (BAD_POSE_ALERT_SECONDS || 30) + " giây";
+        }
 
-    // Đủ 30 giây → cảnh báo!
-    if (badPoseTimer >= BAD_POSE_ALERT_SECONDS) {
-      triggerAlert(poseName);
-      resetBadPoseTimer();
-    }
-  }, 1000);
+        // Đủ 30 giây → cảnh báo!
+        if (badPoseTimer >= (BAD_POSE_ALERT_SECONDS || 30)) {
+          triggerAlert(poseName);
+          resetBadPoseTimer();
+        }
+      } catch (err) {
+        console.error("❌ Lỗi trong vòng lặp startBadPoseTimer:", err);
+      }
+    }, 1000);
+  } catch (err) {
+    console.error("❌ Lỗi startBadPoseTimer:", err);
+  }
 }
 
 /**
@@ -42,12 +54,19 @@ function startBadPoseTimer(poseName) {
  * Gọi khi: ngồi đúng / đã cảnh báo xong / dừng app.
  */
 function resetBadPoseTimer() {
-  clearInterval(badPoseInterval);
-  badPoseInterval = null;
-  badPoseTimer    = 0;
-  document.getElementById("timer-bar").style.width       = "0%";
-  document.getElementById("timer-countdown").textContent =
-    "0 / " + BAD_POSE_ALERT_SECONDS + " giây";
+  try {
+    clearInterval(badPoseInterval);
+    badPoseInterval = null;
+    badPoseTimer    = 0;
+    
+    const timerBar = document.getElementById("timer-bar");
+    const timerCountdown = document.getElementById("timer-countdown");
+    
+    if (timerBar) timerBar.style.width = "0%";
+    if (timerCountdown) timerCountdown.textContent = "0 / " + (BAD_POSE_ALERT_SECONDS || 30) + " giây";
+  } catch (err) {
+    console.error("❌ Lỗi resetBadPoseTimer:", err);
+  }
 }
 
 // ------------------------------------------------------------
@@ -59,17 +78,26 @@ function resetBadPoseTimer() {
  * Tăng đếm cảnh báo, hiện popup và phát âm thanh.
  */
 function triggerAlert(poseName) {
-  stats.alertCount++;
-  updateStatDisplay();
+  try {
+    if (stats) stats.alertCount++;
+    updateStatDisplay();
 
-  document.getElementById("alert-title").textContent   = "⚠️ Cảnh báo Tư thế!";
-  document.getElementById("alert-message").textContent =
-    "Bạn đang " + poseName.toLowerCase() +
-    " trong " + BAD_POSE_ALERT_SECONDS + " giây liên tục!\nHãy điều chỉnh và ngồi thẳng lưng.";
-
-  document.getElementById("alert-overlay").classList.remove("hidden");
-  playAlertSound();
-  addAlertLog(poseName);
+    const alertTitleEl = document.getElementById("alert-title");
+    const alertMessageEl = document.getElementById("alert-message");
+    const alertOverlayEl = document.getElementById("alert-overlay");
+    
+    if (alertTitleEl) alertTitleEl.textContent = "⚠️ Cảnh báo Tư thế!";
+    if (alertMessageEl) {
+      alertMessageEl.textContent = "Bạn đang " + (poseName || "sai tư thế").toLowerCase() +
+        " trong " + (BAD_POSE_ALERT_SECONDS || 30) + " giây liên tục!\nHãy điều chỉnh và ngồi thẳng lưng.";
+    }
+    if (alertOverlayEl) alertOverlayEl.classList.remove("hidden");
+    
+    playAlertSound();
+    addAlertLog(poseName);
+  } catch (err) {
+    console.error("❌ Lỗi triggerAlert:", err);
+  }
 }
 
 /**
@@ -77,7 +105,12 @@ function triggerAlert(poseName) {
  * Đóng popup cảnh báo (gọi từ onclick trên nút "Đã hiểu").
  */
 function closeAlert() {
-  document.getElementById("alert-overlay").classList.add("hidden");
+  try {
+    const alertOverlayEl = document.getElementById("alert-overlay");
+    if (alertOverlayEl) alertOverlayEl.classList.add("hidden");
+  } catch (err) {
+    console.error("❌ Lỗi closeAlert:", err);
+  }
 }
 
 // ------------------------------------------------------------
