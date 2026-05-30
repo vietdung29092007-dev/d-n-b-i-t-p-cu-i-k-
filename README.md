@@ -2,6 +2,8 @@
 
 > Ứng dụng web nhận diện tư thế ngồi học theo thời gian thực, sử dụng **TensorFlow.js MoveNet** để phân tích 17 điểm keypoint trên cơ thể — không cần train model, không cần URL, hoạt động ngay trong trình duyệt.
 
+### 🌐 [Dùng thử ngay → https://vietdung29092007-dev.github.io/d-n-b-i-t-p-cu-i-k-/](https://vietdung29092007-dev.github.io/d-n-b-i-t-p-cu-i-k-/)
+
 ---
 
 ## 📸 Tính năng
@@ -94,7 +96,7 @@ ratio = rộng_mặt(tai-tai) / rộng_canvas > 40%
 
 ## ⚙️ Điều chỉnh ngưỡng phát hiện
 
-Nếu ứng dụng quá nhạy (cảnh báo sai) hoặc không đủ nhạy, mở `script.js` và chỉnh `POSE_THRESHOLDS`:
+Nếu ứng dụng quá nhạy (cảnh báo sai) hoặc không đủ nhạy, mở `js/config.js` và chỉnh `POSE_THRESHOLDS`:
 
 ```javascript
 const POSE_THRESHOLDS = {
@@ -112,10 +114,20 @@ const POSE_THRESHOLDS = {
 
 ```
 d-n-b-i-t-p-cu-i-k-/
-├── index.html    ← Giao diện HTML + CDN scripts
-├── style.css     ← Giao diện dark theme / AI aesthetic
-├── script.js     ← Logic AI + nhận diện tư thế + UI
-└── README.md     ← Tài liệu này
+├── index.html              ← Giao diện HTML + CDN scripts
+├── style.css               ← Dark theme / AI aesthetic
+├── README.md               ← Tài liệu này
+└── js/                     ← Các module JavaScript
+    ├── config.js            ← Hằng số cấu hình & ngưỡng
+    ├── state.js             ← Biến trạng thái toàn cục
+    ├── pose-classifier.js   ← Thuật toán phân loại tư thế
+    ├── renderer.js          ← Vẽ camera + skeleton
+    ├── ui.js                ← Cập nhật giao diện
+    ├── alert-timer.js       ← Timer cảnh báo 30s + popup
+    ├── stats.js             ← Thống kê phiên
+    ├── charts.js            ← Biểu đồ Chart.js
+    ├── pomodoro.js          ← Pomodoro timer
+    └── app.js               ← Điều phối chính + khởi chạy
 ```
 
 ---
