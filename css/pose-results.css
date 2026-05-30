@@ -1,0 +1,73 @@
+/* ---------- KẾT QUẢ TƯ THẾ (thanh %) ---------- */
+.pose-results {
+  display: flex; flex-direction: column; gap: 0.6rem;
+}
+
+.pose-bar-item {
+  display: flex; flex-direction: column; gap: 0.25rem;
+}
+
+.pose-bar-header {
+  display: flex; justify-content: space-between;
+  font-size: 0.78rem;
+}
+
+.pose-bar-label { color: var(--text-secondary); }
+.pose-bar-pct { font-family: 'Space Mono', monospace; font-weight: 700; }
+
+.pose-bar-track {
+  height: 6px; background: var(--bg-card);
+  border-radius: 99px; overflow: hidden;
+}
+
+.pose-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.3s ease;
+  background: var(--accent);
+}
+
+/* Màu của từng tư thế */
+.pose-bar-fill.good  { background: var(--accent-green); }
+.pose-bar-fill.bad-1 { background: var(--accent-red); }
+.pose-bar-fill.bad-2 { background: var(--accent-yellow); }
+.pose-bar-fill.bad-3 { background: var(--accent-orange); }
+
+/* ---------- TRẠNG THÁI HIỆN TẠI ---------- */
+.current-pose-display {
+  text-align: center;
+  padding: 1.5rem 1rem;
+  background: var(--bg-card);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.current-pose-display.state-good {
+  border-color: var(--accent-green);
+  box-shadow: var(--glow-green);
+}
+.current-pose-display.state-bad {
+  border-color: var(--accent-red);
+  box-shadow: var(--glow-red);
+  animation: pulse-bad 1s infinite;
+}
+
+@keyframes pulse-bad {
+  0%, 100% { box-shadow: 0 0 10px rgba(255,71,87,0.3); }
+  50% { box-shadow: 0 0 30px rgba(255,71,87,0.6); }
+}
+
+.pose-icon-big { font-size: 2.5rem; margin-bottom: 0.5rem; }
+
+.pose-name {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.95rem; font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.pose-confidence {
+  font-size: 1.8rem; font-weight: 600;
+  color: var(--accent);
+  font-family: 'Space Mono', monospace;
+}

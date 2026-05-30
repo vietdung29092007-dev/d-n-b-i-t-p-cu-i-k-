@@ -1,0 +1,54 @@
+/* ---------- POMODORO ---------- */
+.pomodoro-section {
+  background: var(--bg-card);
+  border-radius: 10px; padding: 1rem;
+  border: 1px solid var(--border);
+  text-align: center;
+}
+
+.pomodoro-display { margin-bottom: 1rem; }
+
+.pomodoro-time {
+  font-family: 'Space Mono', monospace;
+  font-size: 2.5rem; font-weight: 700;
+  color: var(--accent-orange);
+  text-shadow: 0 0 20px rgba(255,107,53,0.5);
+  line-height: 1;
+  margin-bottom: 0.3rem;
+}
+
+.pomodoro-phase {
+  font-size: 0.8rem; color: var(--text-secondary);
+}
+
+.pomodoro-controls {
+  display: flex; gap: 0.5rem; justify-content: center;
+  margin-bottom: 0.75rem;
+}
+
+.btn-pomo {
+  padding: 0.4rem 1rem;
+  border: 1px solid var(--accent-orange);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--accent-orange);
+  font-family: 'Space Mono', monospace;
+  font-size: 0.75rem; cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-pomo:hover {
+  background: var(--accent-orange);
+  color: var(--bg-main);
+}
+.btn-pomo-reset {
+  border-color: var(--text-secondary);
+  color: var(--text-secondary);
+}
+.btn-pomo-reset:hover {
+  background: var(--text-secondary);
+  color: var(--bg-main);
+}
+
+.pomodoro-cycles {
+  font-size: 0.75rem; color: var(--text-secondary);
+}

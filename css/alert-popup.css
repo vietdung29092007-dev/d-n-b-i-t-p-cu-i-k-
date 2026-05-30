@@ -1,0 +1,53 @@
+/* ---------- POPUP CẢNH BÁO ---------- */
+.alert-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(5px);
+  display: flex; align-items: center; justify-content: center;
+  animation: fadeIn 0.3s ease;
+}
+.alert-overlay.hidden { display: none; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.alert-box {
+  background: var(--bg-panel);
+  border: 2px solid var(--accent-red);
+  border-radius: 16px;
+  padding: 2rem 2.5rem;
+  text-align: center;
+  max-width: 380px;
+  box-shadow: var(--glow-red), 0 20px 60px rgba(0,0,0,0.5);
+  animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes popIn {
+  from { transform: scale(0.7); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+.alert-icon { font-size: 3rem; margin-bottom: 0.75rem; }
+
+.alert-box h2 {
+  font-family: 'Space Mono', monospace;
+  color: var(--accent-red);
+  margin-bottom: 0.5rem;
+}
+
+.alert-box p {
+  color: var(--text-secondary);
+  margin-bottom: 1.25rem;
+  line-height: 1.6;
+}
+
+.alert-box button {
+  background: var(--accent-red);
+  color: white;
+  border: none; border-radius: 8px;
+  padding: 0.6rem 1.5rem;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.85rem; cursor: pointer;
+  font-weight: 700;
+  transition: filter 0.2s;
+}
+.alert-box button:hover { filter: brightness(1.2); }

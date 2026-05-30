@@ -1,0 +1,41 @@
+/* ---------- CSS Variables (Màu sắc chủ đạo) ---------- */
+:root {
+  --bg-main: #0a0e1a;          /* Nền chính: xanh đen đậm */
+  --bg-panel: #111827;         /* Nền panel: xanh đen nhạt hơn */
+  --bg-card: #1a2235;          /* Nền card */
+  --accent: #00d4ff;           /* Màu nhấn: xanh cyan neon */
+  --accent-green: #00ff88;     /* Màu xanh lá: tư thế đúng */
+  --accent-red: #ff4757;       /* Màu đỏ: tư thế sai / cảnh báo */
+  --accent-yellow: #ffd700;    /* Màu vàng: warning */
+  --accent-orange: #ff6b35;    /* Màu cam: Pomodoro */
+  --text-primary: #e8eaf6;     /* Chữ chính */
+  --text-secondary: #7986a3;   /* Chữ phụ */
+  --border: #1e2d47;           /* Viền */
+  --glow-cyan: 0 0 20px rgba(0, 212, 255, 0.3);
+  --glow-green: 0 0 20px rgba(0, 255, 136, 0.3);
+  --glow-red: 0 0 20px rgba(255, 71, 87, 0.4);
+}
+
+/* ---------- Reset & Base ---------- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg-main);
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  overflow-x: hidden;
+}
+
+/* Hiệu ứng lưới nền (grid background) */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}

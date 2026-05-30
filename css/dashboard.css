@@ -1,0 +1,109 @@
+/* ---------- TIMER CẢNH BÁO 30s ---------- */
+.alert-timer-section {
+  background: var(--bg-card);
+  border-radius: 10px;
+  padding: 1rem;
+  border: 1px solid var(--border);
+}
+
+.timer-label {
+  font-size: 0.78rem; color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.timer-bar-wrap {
+  height: 8px; background: var(--bg-main);
+  border-radius: 99px; overflow: hidden;
+  margin-bottom: 0.4rem;
+}
+
+.timer-bar {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--accent-green), var(--accent-yellow), var(--accent-red));
+  border-radius: 99px;
+  transition: width 1s linear;background-color: 0,3s;
+}
+
+.timer-countdown {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+/* ---------- QUICK STATS ---------- */
+.quick-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border-radius: 8px; padding: 0.75rem;
+  text-align: center;
+  border: 1px solid var(--border);
+}
+
+.stat-num {
+  font-family: 'Space Mono', monospace;
+  font-size: 1.3rem; font-weight: 700;
+  margin-bottom: 0.2rem;
+}
+
+.stat-label { font-size: 0.68rem; color: var(--text-secondary); }
+
+.stat-card.good .stat-num  { color: var(--accent-green); }
+.stat-card.bad .stat-num   { color: var(--accent-red); }
+.stat-card.alerts .stat-num { color: var(--accent-yellow); }
+
+/* ---------- BIỂU ĐỒ ---------- */
+.chart-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 220px;
+  margin: 0 auto;
+}
+
+.chart-wrap-line {
+  position: relative;
+  width: 100%; height: 120px;
+}
+
+.chart-legend {
+  display: flex; flex-wrap: wrap; gap: 0.5rem;
+  justify-content: center;
+}
+
+.legend-item {
+  display: flex; align-items: center; gap: 0.3rem;
+  font-size: 0.72rem; color: var(--text-secondary);
+}
+.legend-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ---------- ALERT LOG ---------- */
+.alert-log {
+  max-height: 140px;
+  overflow-y: auto;
+  display: flex; flex-direction: column; gap: 0.4rem;
+}
+.alert-log::-webkit-scrollbar { width: 4px; }
+.alert-log::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+.log-item {
+  background: var(--bg-card);
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.72rem;
+  border-left: 3px solid var(--accent-red);
+  display: flex; justify-content: space-between; gap: 0.5rem;
+}
+.log-time {
+  color: var(--text-secondary);
+  font-family: 'Space Mono', monospace;
+  flex-shrink: 0;
+}
+
+.log-empty { font-size: 0.75rem; color: var(--text-secondary); text-align: center; padding: 0.5rem; }
