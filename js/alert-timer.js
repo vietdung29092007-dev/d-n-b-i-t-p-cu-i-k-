@@ -13,20 +13,20 @@
 
 const BAD_POSE_ADVICE = {
   "Cúi đầu": {
-    harm: "gây mỏi cổ, căng cơ cổ và ảnh hưởng xấu đến cột sống cổ.",
-    fix: "giữ đầu thẳng, vai thả lỏng và đặt mắt nhìn thẳng, như tư thế ngồi đúng ban đầu."
+    harm: "Gây thoái hóa đốt sống cổ sớm, chèn ép dây thần kinh và có nguy cơ thoát vị đĩa đệm.",
+    fix: "Giữ đầu thẳng, thả lỏng vai và nhìn thẳng về phía trước."
   },
   "Vẹo lưng": {
-    harm: "làm lệch cột sống, gây đau một bên vai và mỏi lưng dưới.",
-    fix: "đặt hai bàn chân cân bằng, kéo vai về phía sau và giữ lưng thẳng như tư thế ban đầu."
+    harm: "Gây biến dạng, cong vẹo cột sống vĩnh viễn và đau thần kinh tọa mãn tính.",
+    fix: "Ngồi thẳng lưng, thả lỏng vai và đặt hai chân chạm sàn cân bằng."
   },
   "Mắt quá gần": {
-    harm: "khiến mắt bị mỏi, mờ, khô, rát, lâu ngày dẫn tới cận thị.",
-    fix: "kéo màn hình ra xa hơn, giữ cằm ngang và ngồi thẳng như ban đầu."
+    harm: "Gây suy giảm thị lực nghiêm trọng, biến chứng cận thị nặng và tổn thương võng mạc.",
+    fix: "Đẩy màn hình ra xa (khoảng 50-60cm), giữ cằm ngang và ngồi thẳng lưng."
   },
   default: {
-    harm: "gây căng cơ, mệt mỏi và làm giảm hiệu quả học tập nếu tiếp tục.",
-    fix: "trở về tư thế ngồi đúng ban đầu: lưng thẳng, vai thả lỏng, đầu giữ thẳng và mắt nhìn thẳng."
+    harm: "Tàn phá vóc dáng, gây tổn thương hệ cơ xương khớp toàn thân và tích tụ mệt mỏi dai dẳng.",
+    fix: "Điều chỉnh lại tư thế ngay: Thẳng lưng, thả lỏng vai và nhìn thẳng."
   }
 };
 
@@ -108,7 +108,7 @@ function triggerAlert(poseName) {
     const poseLabel = (poseName || "sai tư thế").toLowerCase();
     const advice = BAD_POSE_ADVICE[poseName] || BAD_POSE_ADVICE.default;
     const message =
-      "So với tư thế đúng ban đầu, bạn đang " + poseLabel + " trong " +
+      "So với tư thế ngồi đúng chuẩn, bạn đang " + poseLabel + " trong " +
       (BAD_POSE_ALERT_SECONDS || 30) + " giây liên tục.\n\n" +
       "Tác hại: " + advice.harm + "\n" +
       "Cách sửa: " + advice.fix;
