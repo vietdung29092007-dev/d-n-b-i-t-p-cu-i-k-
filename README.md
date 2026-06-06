@@ -70,7 +70,9 @@ d-n-b-i-t-p-cu-i-k-/
 ├── bao_cao.tex           ← Báo cáo học thuật (LaTeX)
 ├── slide.tex             ← Slide thuyết trình (LaTeX Beamer)
 ├── docs/                 ← Thư mục tài liệu phụ
-│   └── setup-guide.html  (Hướng dẫn cấu hình Firebase)
+│   ├── setup-guide.html  (Hướng dẫn cấu hình Firebase)
+│   ├── css/setup-guide.css
+│   └── js/setup-guide.js
 ├── css/                  ← (14 Module CSS Giao diện)
 │   ├── variables.css, layout.css, camera.css...
 │   └── gamification.css, network.css, chat.css...
