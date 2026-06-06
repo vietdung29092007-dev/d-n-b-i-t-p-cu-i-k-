@@ -65,18 +65,21 @@ Mã nguồn được viết hoàn toàn bằng Vanilla JavaScript và CSS thuầ
 
 ```text
 d-n-b-i-t-p-cu-i-k-/
-├── index.html            ← Giao diện chính
-├── README.md             ← Tài liệu này
-├── bao_cao.tex           ← Báo cáo chi tiết (LaTeX)
+├── index.html            ← Giao diện Web SPA (Trang chính duy nhất)
+├── README.md             ← Tài liệu Markdown
+├── bao_cao.tex           ← Báo cáo học thuật (LaTeX)
 ├── slide.tex             ← Slide thuyết trình (LaTeX Beamer)
-├── css/                  ← (10 Module CSS Giao diện)
+├── docs/                 ← Thư mục tài liệu phụ
+│   └── setup-guide.html  (Hướng dẫn cấu hình Firebase)
+├── css/                  ← (14 Module CSS Giao diện)
 │   ├── variables.css, layout.css, camera.css...
-│   └── ai-loading.css, alert-popup.css...
-└── js/                   ← (10 Module JS Logic)
-    ├── config.js         (Thông số thuật toán)
+│   └── gamification.css, network.css, chat.css...
+└── js/                   ← (12 Module JS Logic)
+    ├── config.js         (Thông số & Thuật toán)
     ├── pose-classifier.js(Lõi nhận diện AI)
-    ├── app.js            (Điều phối chính)
-    └── charts.js, pomodoro.js, ui.js...
+    ├── database.js, auth.js (Kết nối Đám mây Firebase)
+    ├── gamification.js   (Logic Nhiệm vụ & Chuỗi lửa)
+    └── app.js, charts.js, pomodoro.js, ui.js...
 ```
 
 ---
