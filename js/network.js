@@ -63,14 +63,27 @@ async function leaveRoom() {
   currentRoomId = null;
 }
 
-/* ---------- CẬP NHẬT TRẠNG THÁI TRỰC TUYẾN ---------- */
+/* ---------- CẬP NHẬT TRẠNG THÁI TRỰC TUYẼN (throttled 5s) ---------- */
+let _lastStatusUpdate = 0;
+let _lastStatus = '';
+let _lastPose = '';
+
 function updateOnlineStatus(status, poseState) {
   if (!currentUser || !currentRoomId || !isFirebaseConfigured) return;
 
+  // Chỉ gửi lên Firebase nếu có thay đổi và cách ít nhất 5 giây
+  const now = Date.now();
+  if (status === _lastStatus && poseState === _lastPose) return;
+  if (now - _lastStatusUpdate < 5000) return;
+
+  _lastStatusUpdate = now;
+  _lastStatus = status;
+  _lastPose = poseState;
+
   const uid = currentUser.uid;
   db.ref(`rooms/${currentRoomId}/members/${uid}`).update({
-    status: status,         // 'studying' | 'warning' | 'break' | 'online'
-    poseState: poseState    // 'Ngồi đúng' | 'Cúi đầu' | ...
+    status: status,
+    poseState: poseState
   });
 }
 

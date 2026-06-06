@@ -103,15 +103,16 @@ function autoSaveSession() {
   const elapsed = (Date.now() - sessionStartTime) / 60000; // phút
   if (elapsed < 0.5) return; // Bỏ qua phiên < 30 giây
 
-  const total = poseCounts.good + poseCounts.bad1 + poseCounts.bad2 + poseCounts.bad3;
-  const goodPct = total > 0 ? (poseCounts.good / total * 100) : 0;
-  const badPct = 100 - goodPct;
+  // Lấy số liệu từ biến stats (mô đun stats.js dùng)
+  const total   = stats.totalSeconds || 1;
+  const goodPct = Math.round((stats.goodSeconds / total) * 100 * 10) / 10;
+  const badPct  = Math.round((stats.badSeconds  / total) * 100 * 10) / 10;
 
   saveStudySession(currentUser.uid, {
-    durationMinutes: Math.round(elapsed * 10) / 10,
-    goodPosturePct: Math.round(goodPct * 10) / 10,
-    badPosturePct: Math.round(badPct * 10) / 10,
-    totalAlerts: alertCount,
-    pomodoroCompleted: pomoCycles
+    durationMinutes:  Math.round(elapsed * 10) / 10,
+    goodPosturePct:   goodPct,
+    badPosturePct:    badPct,
+    totalAlerts:      stats.alertCount || 0,
+    pomodoroCompleted: pomodoroCycles || 0
   });
 }
