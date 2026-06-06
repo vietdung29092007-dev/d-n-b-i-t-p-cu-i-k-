@@ -1,0 +1,106 @@
+/* ========================================
+   gamification.css — Chuỗi lửa & Nhiệm vụ
+   ======================================== */
+
+/* --- Chuỗi Lửa (Streak) --- */
+.user-streak {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  margin-top: 0.25rem;
+  display: inline-block;
+  transition: all 0.3s;
+}
+
+/* --- Thẻ Nhiệm vụ Hàng ngày --- */
+.quest-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.quest-item {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: all 0.3s;
+}
+
+.quest-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(0, 212, 255, 0.3);
+}
+
+.quest-item.completed {
+  border-color: var(--accent-green);
+  background: rgba(0, 255, 136, 0.05);
+}
+
+.quest-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.quest-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.quest-item.completed .quest-title {
+  color: var(--accent-green);
+}
+
+.quest-desc {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+/* Progress bar */
+.quest-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.progress-bar-wrap {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+.quest-item.completed .progress-bar {
+  background: var(--accent-green);
+  box-shadow: var(--glow-green);
+}
+
+.progress-text {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  min-width: 35px;
+  text-align: right;
+}
+
+.quest-item.completed .progress-text {
+  color: var(--accent-green);
+}

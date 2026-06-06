@@ -61,11 +61,13 @@ function onAuthSuccess(user) {
   const btnSignIn = document.getElementById('btn-sign-in');
   const userInfo  = document.getElementById('user-info');
   const userName  = document.getElementById('user-name');
+  const userStreak = document.getElementById('user-streak');
   const userAvatar = document.getElementById('user-avatar');
 
   if (btnSignIn)  btnSignIn.classList.add('hidden');
   if (userInfo)   userInfo.classList.remove('hidden');
   if (userName)   userName.textContent = user.displayName || 'Người dùng';
+  if (userStreak) userStreak.style.display = 'inline-block';
   if (userAvatar) {
     userAvatar.src = user.photoURL || '';
     userAvatar.alt = user.displayName || '';
@@ -83,6 +85,11 @@ function onAuthSuccess(user) {
   // Tự động vào phòng mặc định + bật chat
   joinRoom('general');
   initChat('general');
+
+  // Khởi tạo Gamification (Streak & Quests)
+  if (typeof initGamification === 'function') {
+    initGamification();
+  }
 }
 
 /* ---------- CẬP NHẬT UI KHI ĐĂNG XUẤT ---------- */

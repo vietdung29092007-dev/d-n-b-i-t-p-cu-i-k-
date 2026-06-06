@@ -108,11 +108,18 @@ function autoSaveSession() {
   const goodPct = Math.round((stats.goodSeconds / total) * 100 * 10) / 10;
   const badPct  = Math.round((stats.badSeconds  / total) * 100 * 10) / 10;
 
-  saveStudySession(currentUser.uid, {
+  const sessionData = {
     durationMinutes:  Math.round(elapsed * 10) / 10,
     goodPosturePct:   goodPct,
     badPosturePct:    badPct,
     totalAlerts:      stats.alertCount || 0,
     pomodoroCompleted: pomodoroCycles || 0
-  });
+  };
+
+  saveStudySession(currentUser.uid, sessionData);
+
+  // Cập nhật hệ thống Gamification (Chuỗi lửa & Nhiệm vụ)
+  if (typeof updateGamification === 'function') {
+    updateGamification(sessionData);
+  }
 }
