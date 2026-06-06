@@ -88,12 +88,27 @@ function onAuthSuccess(user) {
 /* ---------- CẬP NHẬT UI KHI ĐĂNG XUẤT ---------- */
 function onAuthSignedOut() {
   const btnSignIn = document.getElementById('btn-sign-in');
-  const userInfo = document.getElementById('user-info');
+  const userInfo  = document.getElementById('user-info');
 
   if (btnSignIn) btnSignIn.classList.remove('hidden');
-  if (userInfo) userInfo.classList.add('hidden');
+  if (userInfo)  userInfo.classList.add('hidden');
 
-  // Ẩn các panel online
+  // Ẩn cột thứ 4 và thu lưới về 3 cột
   const networkPanel = document.getElementById('network-panel');
+  const mainGrid     = document.querySelector('.main-grid');
   if (networkPanel) networkPanel.classList.add('hidden');
+  if (mainGrid)     mainGrid.classList.remove('has-community');
+}
+
+/* ---------- CHUYỂN TAB COMMUNITY ---------- */
+function switchCommunityTab(tab) {
+  // Cập nhật nút tab
+  document.querySelectorAll('.community-tab').forEach(el => {
+    el.classList.toggle('active', el.dataset.tab === tab ||
+      (tab === 'room'    && el.textContent.includes('Phòng')) ||
+      (tab === 'history' && el.textContent.includes('Lịch')));
+  });
+  // Chuyển pane
+  document.getElementById('pane-room')   ?.classList.toggle('active', tab === 'room');
+  document.getElementById('pane-history')?.classList.toggle('active', tab === 'history');
 }
