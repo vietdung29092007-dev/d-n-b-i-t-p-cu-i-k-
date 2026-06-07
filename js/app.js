@@ -17,6 +17,11 @@
  * Thứ tự: hiện loading → tải MoveNet → bật camera → thiết lập canvas → khởi UI → vào vòng lặp
  */
 async function startApp() {
+  // Tránh khởi động nhiều lần nếu đã đang chạy
+  if (isRunning) {
+    console.warn("startApp: ứng dụng đã chạy, bỏ qua khởi động lại.");
+    return;
+  }
   const loadingEl = document.getElementById("ai-loading");
   const overlayEl = document.getElementById("camera-overlay");
   const barEl     = document.getElementById("ai-loading-bar");
@@ -157,7 +162,7 @@ async function startApp() {
  * stopApp()
  * Dừng camera, vòng lặp và các interval.
  */
-function stopApp() {
+async function stopApp() {
   isRunning = false;
 
   // Lưu phiên học lên Firebase trước khi reset
@@ -170,6 +175,17 @@ function stopApp() {
     mediaStream = null;
   }
   if (video) video.srcObject = null;
+
+  // Giải phóng detector để tránh rò rỉ bộ nhớ (WebGL/wasm)
+  try {
+    if (detector && typeof detector.dispose === 'function') {
+      await detector.dispose();
+      detector = null;
+      console.log('✅ Detector đã được dispose.');
+    }
+  } catch (e) {
+    console.warn('Không thể dispose detector:', e);
+  }
 
   clearInterval(badPoseInterval);
   clearInterval(lineDataInterval);
