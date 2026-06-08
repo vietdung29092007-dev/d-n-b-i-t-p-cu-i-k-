@@ -68,7 +68,6 @@ d-n-b-i-t-p-cu-i-k-/
 ├── index.html            ← Giao diện Web SPA (Trang chính duy nhất)
 ├── README.md             ← Tài liệu Markdown
 ├── bao_cao.tex           ← Báo cáo học thuật (LaTeX)
-├── slide.tex             ← Slide thuyết trình (LaTeX Beamer)
 ├── docs/                 ← Thư mục tài liệu phụ
 │   ├── setup-guide.html  (Hướng dẫn cấu hình Firebase)
 │   ├── css/setup-guide.css
@@ -86,7 +85,7 @@ d-n-b-i-t-p-cu-i-k-/
 
 ---
 
-## 📚 Tài liệu Báo Cáo & Slide
+## 📚 Tài liệu Báo Cáo 
 
 Dự án bao gồm sẵn mã nguồn tài liệu dành cho việc báo cáo học thuật:
 - **`bao_cao.tex`**: File báo cáo LaTeX chi tiết (5 chương).
