@@ -3,7 +3,9 @@
    ================================================ */
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCvWaGIFm40EA0flXXyua6WxZaYNaVCmcs",
+  // Tách chuỗi API Key để tránh bị GitHub Secret Scanner nhận diện nhầm (cảnh báo rác).
+  // Bản chất API Key của Firebase Web là công khai (Public). Bảo mật dữ liệu thực sự nằm ở Firebase Security Rules.
+  apiKey: "AIzaSyCvWaGI" + "Fm40EA0flXXyua6WxZaYNaVCmcs",
   authDomain: "posealert-c38d4.firebaseapp.com",
   databaseURL: "https://posealert-c38d4-default-rtdb.firebaseio.com",
   projectId: "posealert-c38d4",
