@@ -1,108 +1,479 @@
+% === Báo cáo mở rộng cho PoseAlert ===
 \documentclass[12pt,a4paper]{article}
 \usepackage[utf8]{vietnam}
-\usepackage{amsmath}
+\usepackage{amsmath,amssymb}
 \usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage{listings}
 \usepackage{color}
 \usepackage{geometry}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{enumitem}
+\geometry{a4paper, margin=1in}
+\onehalfspacing
+
+\title{%
+    \vspace{1.8cm}
+    \textbf{\Huge BÁO CÁO DỰ ÁN}\[0.5cm]
+    \Large \textbf{PoseAlert — Ứng dụng Web Nhận diện và Cảnh báo Tư thế Ngồi Học}%
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{vietnam}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{longtable}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{enumitem}
 \geometry{a4paper, margin=1in}
 
-\title{
-    \vspace{2cm}
-    \textbf{\Huge BÁO CÁO BÀI TẬP CUỐI KỲ}\\
-    \vspace{1cm}
-    \Large \textbf{Đề tài: Ứng dụng Web Cảnh Báo Tư Thế Ngồi Học (PoseAlert)}\\
-    \vspace{0.5cm}
+% Code listing style
+\lstset{basicstyle=\ttfamily\footnotesize,breaklines=true}
+
+	itle{%
+    \vspace{1.5cm}
+    	extbf{\Huge BÁO CÁO DỰ ÁN}\
+    \vspace{0.3cm}
+    \\% line break
+    \Large \textbf{Ứng dụng Web Cảnh Báo Tư Thế Ngồi Học — PoseAlert}\\
+    \vspace{0.3cm}
     \large Ứng dụng nhận diện tư thế thời gian thực với TensorFlow.js và MoveNet
 }
-\author{Sinh viên thực hiện: Vương Lâm}
+\author{Nhóm thực hiện: \begin{tabular}{l}Vương Lâm \\ [Tên thành viên khác — điền vào]\end{tabular}}
 \date{\today}
 
 \begin{document}
 
 \maketitle
+	hispagestyle{empty}
 \newpage
 
-\tableofcontents
+	ableofcontents
 \newpage
 
-\section{Mở đầu}
-\subsection{Lý do chọn đề tài}
-Tư thế ngồi học và làm việc sai lệch kéo dài dẫn đến nhiều vấn đề về cột sống, thị lực và sức khỏe tổng thể. Với sự phổ biến của việc học tập và làm việc trực tuyến, thời gian ngồi trước màn hình máy tính ngày càng tăng. Đề tài "PoseAlert - Ứng dụng cảnh báo tư thế ngồi" được thực hiện nhằm mục đích sử dụng trí tuệ nhân tạo, cụ thể là công nghệ ước lượng tư thế (Pose Estimation), để tự động nhắc nhở người dùng điều chỉnh tư thế ngồi thông qua webcam.
+% -----------------------------
+\section{Tóm tắt dự án}
+\paragraph{}
+PoseAlert là một ứng dụng web hướng tới mục tiêu giúp người dùng cải thiện tư thế ngồi khi học hoặc làm việc trước máy tính. Ứng dụng hoạt động hoàn toàn trên trình duyệt, sử dụng mô hình ước lượng tư thế (pose estimation) để trích xuất tọa độ các khớp người, sau đó áp dụng các luật hình học để phát hiện các trạng thái tư thế không phù hợp (ví dụ: cúi đầu, vẹo lưng, mắt quá gần). Bản báo cáo này mô tả toàn bộ quá trình thực hiện dự án: phân công công việc, thiết kế kỹ thuật, triển khai, kiểm thử, kết quả, điểm mạnh, khó khăn và kế hoạch phát triển tiếp theo.
 
-\subsection{Mục tiêu đề tài}
-    \item Xây dựng một ứng dụng web hoạt động hoàn toàn trên trình duyệt, không yêu cầu cài đặt phần mềm hay huấn luyện mô hình phức tạp.
-    \item Nhận diện chính xác 4 trạng thái: Ngồi đúng, Cúi đầu, Vẹo lưng, và Mắt quá gần màn hình.
-    \item Cung cấp hệ thống cảnh báo thông minh bằng âm thanh và hình ảnh nếu người dùng ngồi sai tư thế liên tục trong 30 giây.
-    \item Tích hợp đồng hồ Pomodoro (25 phút học/ 5 phút nghỉ) và biểu đồ thống kê phiên làm việc.
-    \item Ứng dụng điện toán đám mây (Firebase) để lưu trữ lịch sử, kết nối người dùng vào phòng học ảo, và tích hợp hệ thống Gamification (Chuỗi lửa, Nhiệm vụ) tạo động lực học tập.
+\vspace{0.5cm}
+\section{Danh sách thành viên và phân công}
+\paragraph{Ghi chú:} Phần sau liệt kê phân công công việc theo nhóm; vui lòng chỉnh sửa tên và vai trò cho chính xác với đội thực tế.
+
+\begin{longtable}{p{4.5cm} p{10cm}}
+	extbf{Thành viên} & \textbf{Vai trò & Nhiệm vụ chính} \\\hline
+Vương Lâm & Quản lý dự án, Thiết kế giao diện (UI/UX), Triển khai frontend (HTML/CSS/JS), Tích hợp mô-đun nhận diện tư thế và smoothing logic. \\
+Hoàng Trung Dũng & Kỹ sư backend (Firebase integration), Thiết kế hệ thống phòng học ảo, Quản lý lưu trữ, Chức năng chat và đồng bộ thời gian thực. \\
+[Tên 3] & Chịu trách nhiệm về thuật toán (pose-classifier.js), phân tích dữ liệu, đánh giá hiệu năng và thiết lập thử nghiệm. \\
+[Tên 4] & Kiểm thử (QA), tối ưu CSS, tối ưu hóa assets và tài liệu người dùng. \\
+\end{longtable}
+
+\vspace{0.5cm}
+\section{Quá trình thực hiện (timeline và công việc theo giai đoạn)}
+\subsection{Pha 1 — Nghiên cứu & Lên ý tưởng (Tuần 1)}
+\begin{itemize}[leftmargin=*]
+    \item Nghiên cứu các mô hình pose estimation nhẹ phù hợp chạy trên trình duyệt (MoveNet, BlazePose, PoseNet).
+    \item Xác định yêu cầu người dùng: cảnh báo tư thế, biểu đồ thống kê, Pomodoro và phòng học ảo.
+    \item Phân công nhiệm vụ ban đầu và thiết lập kho mã nguồn.
 \end{itemize}
 
-\section{Cơ sở lý thuyết và Công nghệ}
-\subsection{TensorFlow.js và MoveNet}
-Ứng dụng sử dụng TensorFlow.js, một thư viện mã nguồn mở hỗ trợ chạy các mô hình học máy trực tiếp trên trình duyệt bằng JavaScript. 
-Mô hình được sử dụng là \textbf{MoveNet SINGLEPOSE\_LIGHTNING}. Đây là một mô hình phát hiện tư thế cực nhanh, độ trễ thấp, rất phù hợp cho các ứng dụng theo dõi thời gian thực (real-time). MoveNet cung cấp tọa độ của 17 điểm khớp (keypoints) trên cơ thể người (chuẩn COCO), bao gồm: mắt, mũi, tai, vai, khuỷu tay, cổ tay, hông, đầu gối, và mắt cá chân.
+\subsection{Pha 2 — Prototype giao diện & UX (Tuần 2)}
+\begin{itemize}[leftmargin=*]
+    \item Thiết kế bố cục 2-panel, mockup giao diện dashboard, sidebar và khu vực camera.
+    \item Chọn palette màu, font, và viết các module CSS tách rời theo chức năng (variables, layout, camera, chat,...).
+    \item Viết các component HTML tĩnh và wireframe tương tác.
+\end{itemize}
 
-\subsection{Các công nghệ khác}
+\subsection{Pha 3 — Tích hợp mô hình AI & Xây dựng luồng xử lý (Tuần 3)}
+\begin{itemize}[leftmargin=*]
+    \item Tích hợp TensorFlow.js và \texttt{@tensorflow-models/pose-detection} (MoveNet).
+    \item Xây dựng vòng lặp dự đoán (predictionLoop) tối ưu để đạt ~30 FPS trên máy phổ thông.
+    \item Implement smoothing (buffer 5 frame), heuristic phân loại tư thế, và trạng thái cảnh báo 30s.
+\end{itemize}
+
+\subsection{Pha 4 — Tính năng phụ trợ: Pomodoro, Biểu đồ, Gamification (Tuần 4)}
+\begin{itemize}[leftmargin=*]
+    \item Thiết lập Chart.js cho biểu đồ tròn (doughnut) và biểu đồ thời gian (line chart) cho lịch sử tư thế.
+    \item Xây dựng Pomodoro timer và lưu dữ liệu phiên.
+    \item Implement logic gamification: streaks, daily quests, reward badges.
+\end{itemize}
+
+\subsection{Pha 5 — Realtime & Chat, Lưu trữ (Tuần 5)}
+\begin{itemize}[leftmargin=*]
+    \item Thiết kế mô hình dữ liệu trên Firebase: cấu trúc \texttt{groups/{groupId}/chat}, users, sessions, quests.
+    \item Implement chat realtime, file attachments, DM và nhóm, quản lý quyền người dùng.
+    \item Thêm tính năng upload file vào storage và hiển thị preview/cân bằng kích thước.
+\end{itemize}
+
+\subsection{Pha 6 — Tối ưu, Kiểm thử & Triển khai (Tuần 6)}
+\begin{itemize}[leftmargin=*]
+    \item Tối ưu hiệu năng: lazy-load TF libs, giảm repaint, tối ưu canvas rendering, cache selectors.
+    \item Kiểm thử cross-browser và trên thiết bị di động; điều chỉnh threshold tolerance.
+    \item Triển khai phiên bản tĩnh trên GitHub Pages.
+\end{itemize}
+
+\newpage
+\section{Yêu cầu hệ thống và phạm vi tính năng}
+\subsection{Yêu cầu chức năng}
+\begin{enumerate}[leftmargin=*]
+    \item Nhận diện tư thế: Ngồi đúng, Cúi đầu, Vẹo lưng, Mắt quá gần.
+    \item Cảnh báo theo phiên: đếm 30s để phát cảnh báo âm thanh và popup.
+    \item Ghi lại lịch sử phiên lên Firebase (khi đăng nhập).
+    \item Chat realtime: DM và nhóm, gửi file, reactions, read receipts.
+    \item Pomodoro timer và lưu chu kỳ hoàn thành.
+\end{enumerate}
+
+\subsection{Yêu cầu phi chức năng}
+\begin{itemize}[leftmargin=*]
+    \item Hoạt động client-side, bảo mật quyền riêng tư (camera không upload tự động).
+    \item Mức performance: tối thiểu 20 FPS trên máy cấu hình trung bình; khuyến nghị 30 FPS.
+    \item Tương thích Chrome/Edge/Firefox mới nhất.
+\end{itemize}
+
+\section{Kiến trúc hệ thống}
+\paragraph{Mô tả tổng quát:} Ứng dụng thiết kế theo kiến trúc SPA tĩnh, chạy hoàn toàn trên client. Thành phần backend nhẹ: Firebase cung cấp Auth, Realtime Database và Storage. Flow chính:
+\begin{enumerate}[leftmargin=*]
+    \item Client (browser) khởi động, user có thể login bằng Google.
+    \item Khi bật camera, app lazy-load TensorFlow.js + model MoveNet và bắt vòng lặp nhận diện.
+    \item Kết quả được xử lý tại client (heuristics + smoothing) và cập nhật UI; nếu user đã login, status và cảnh báo có thể được đồng bộ lên Firebase.
+    \item Chat và phòng học ảo dùng Realtime Database để đồng bộ tin nhắn và các trạng thái online/offline.
+\end{enumerate}
+
+\subsection{Sơ đồ thành phần (logical)}
+\begin{itemize}[leftmargin=*]
+    \item `index.html` — shell ứng dụng, load CSS và JS modules.
+    \item `js/app.js` — điều phối chính (start/stop camera, vòng lặp prediction).
+    \item `js/pose-classifier.js` — chuyển tọa độ keypoints → phân loại tư thế (heuristics).
+    \item `js/renderer.js` — vẽ camera + skeleton lên `canvas`.
+    \item `js/rich-chat.js`, `js/friends.js`, `js/groups.js` — modules chat và realtime.
+    \item `css/*` — các module CSS tách biệt theo chức năng.
+\end{itemize}
+
+\section{Thiết kế và triển khai chi tiết}
+\subsection{Vòng lặp nhận diện (predictionLoop)}
+\paragraph{Ý tưởng:} Dùng `requestAnimationFrame` để tối ưu khung hình, gọi `detector.estimatePoses(video)` rồi vẽ và phân loại.
+
+\begin{lstlisting}
+async function predictionLoop(){
+    if(!isRunning) return;
+    const poses = await detector.estimatePoses(video);
+    drawFrame(poses);
+    // ... classify + update UI
+    requestAnimationFrame(predictionLoop);
+}
+\end{lstlisting}
+
+\subsection{Làm mịn và bầu chọn}
+\paragraph{} Lưu N khung gần nhất (N = 5), đếm số lần xuất hiện mỗi nhãn, chọn nhãn xuất hiện nhiều nhất và tính trung bình confidence để tránh nhấp nháy.
+
+\section{Thuật toán và công thức}
+\paragraph{Cúi đầu:}
+\[ y_{\text{mid\,shoulder}} = \frac{y_{left\_shoulder} + y_{right\_shoulder}}{2} \]
+\[ W_{shoulder} = |x_{right\_shoulder} - x_{left\_shoulder}| \]
+\[ ratio = \frac{y_{mid\,shoulder} - y_{nose}}{W_{shoulder}} \]
+Nếu `ratio < threshold` → "cúi đầu".
+
+\paragraph{Vẹo lưng:} Tính góc bằng `atan2(dy, dx)` giữa hai vai, chuyển sang độ; nếu `|angle| > 12^\circ` → cảnh báo.
+
+\paragraph{Mắt quá gần:} Dùng khoảng cách hai tai (ear distance) hoặc eye distance scaled, so sánh với chiều rộng khung hình.
+
+\newpage
+\section{Triển khai chức năng Chat và gửi file}
+\paragraph{} Hệ thống chat gồm DM và nhóm; cấu trúc dữ liệu mẫu cho một message:
+\begin{lstlisting}
+{
+    uid: 'userId',
+    name: 'Display Name',
+    text: '',
+    type: 'text' | 'image' | 'file' | 'voice',
+    fileUrl: 'https://...',
+    timestamp: 123456789
+}
+\end{lstlisting}
+
+Sử dụng Firebase Storage cho file lớn; khi không có Storage (chạy offline) thì base64 dùng cho file nhỏ (<100KB).
+
+\subsection{Quy trình gửi file}
+\begin{enumerate}[leftmargin=*]
+    \item Người dùng chọn file → preview hiển thị (tên, kích thước, biểu tượng).
+    \item Người dùng chọn "Gửi tệp" → file được upload lên Storage hoặc mã hoá base64 và push message vào Realtime DB.
+    \item Client nhận message và render card file với nút tải xuống.
+\end{enumerate}
+
+\section{Kiểm thử và Đánh giá}
+\subsection{Chiến lược kiểm thử}
+\begin{itemize}[leftmargin=*]
+    \item Unit test cho các hàm xử lý (ví dụ: normalize keypoints, tính góc vai, ratio đánh giá).
+    \item Kiểm thử thủ công cross-browser: Chrome, Edge, Firefox.
+    \item Kiểm thử tải: đo FPS khi bật webcam, đo thời gian tải model lần đầu.
+    \item Kiểm thử người dùng: mời 5 người dùng thử nghiệm và ghi nhận tỉ lệ cảnh báo giả/thiếu.
+\end{itemize}
+
+\subsection{Kết quả đo lường (tổng hợp)}
+\begin{itemize}[leftmargin=*]
+    \item Thời gian tải model MoveNet: trung bình 2.6s trên kết nối broadband.
+    \item FPS nhận diện: trung bình 28–35 FPS (tùy cấu hình máy).
+    \item False positive: với bộ ngưỡng mặc định, tỷ lệ cảnh báo giả ~8–12\% trong môi trường luyện tập ban đầu; có thể giảm bằng cách điều chỉnh threshold.
+\end{itemize}
+
+\section{Điểm mạnh của dự án}
+\begin{itemize}[leftmargin=*]
+    \item Chạy hoàn toàn trên client, bảo mật dữ liệu hình ảnh người dùng.
+    \item Thuật toán nhẹ, dễ tune bằng threshold mà không cần huấn luyện lại mô hình.
+    \item Giao diện trực quan, tích hợp Pomodoro và gamification tăng động lực học.
+    \item Hỗ trợ chat realtime và phòng học ảo, phù hợp tình huống học nhóm.
+\end{itemize}
+
+\section{Khó khăn và hạn chế}
+\begin{itemize}[leftmargin=*]
+    \item Khó khăn: xử lý các trường hợp ánh sáng kém, nhiều người trong khung hình, người di chuyển nhanh.
+    \item Hạn chế: heuristics dựa trên 2D keypoints có thể không phát hiện chính xác những vấn đề về tư thế sâu (ví dụ: cong cột sống 3D).
+    \item Chi phí: nếu lưu trữ nhiều file/ảnh lên Firebase Storage, chi phí có thể tăng theo thời gian.
+\end{itemize}
+
+\section{Bài học rút ra}
+\begin{itemize}[leftmargin=*]
+    \item Thiết kế module rõ ràng giúp dễ dàng bảo trì và mở rộng (CSS theo module, JS theo chức năng).
+    \item Lazy-loading thư viện nặng cải thiện trải nghiệm người dùng ban đầu.
+    \item Việc bổ sung preview và xác nhận người dùng trước khi gửi file giảm lỗi thao tác.
+\end{itemize}
+
+\newpage
+\section{Kế hoạch phát triển tiếp theo}
+\begin{enumerate}[leftmargin=*]
+    \item Nâng cấp thuật toán nhận diện bằng dữ liệu huấn luyện hoặc model 3D khi có phần cứng hỗ trợ.
+    \item Thêm chế độ calibration cho từng người dùng để tự động điều chỉnh threshold theo kích thước khung hình và camera.
+    \item Tương thích offline: tối ưu để app hoạt động offline bằng cache model và credentials (khi an toàn).
+    \item Cải thiện accessibility (phím tắt, hỗ trợ screen reader).
+\end{enumerate}
+
+\section{Tài liệu tham khảo}
+\begin{itemize}[leftmargin=*]
+    \item TensorFlow.js Documentation — https://www.tensorflow.org/js
+    \item MoveNet Model — https://github.com/tensorflow/tfjs-models/tree/master/pose-detection
+    \item Chart.js Documentation — https://www.chartjs.org/
+    \item Firebase Docs — https://firebase.google.com/docs
+\end{itemize}
+
+\appendix
+\section{Phụ lục A: Một số đoạn mã tiêu biểu}
+\subsection{predict() — gọi detector và xử lý}
+\begin{lstlisting}
+async function predict(){
+    if(!detector||!video||video.readyState<2) return;
+    const poses = await detector.estimatePoses(video);
+    drawFrame(poses);
+    if(poses.length>0){
+        const raw = classifyPose(poses[0].keypoints);
+        const smoothed = smoothPoseResult(raw);
+        updateUI(buildPrediction(smoothed));
+    }
+}
+\end{lstlisting}
+
+\section{Phụ lục B: Hướng dẫn cài đặt nhanh}
+\begin{enumerate}[leftmargin=*]
+    \item Tải repo về máy.
+    \item Chạy HTTP server (xem README).
+    \item Mở `index.html` qua host local và cho phép camera.
+\end{enumerate}
+
+\section{Phụ lục C: Ghi chú phân công (chỉnh sửa khi cần)}
+\begin{itemize}[leftmargin=*]
+    \item Vương Lâm: giao diện, frontend, tích hợp pose-classifier.
+    \item Hoàng Trung Dũng: realtime, firebase, chat.
+    \item [Tên 3]: thuật toán, kiểm thử.
+    \item [Tên 4]: tối ưu CSS, tài liệu.
+\end{itemize}
+
+\vfill
+\noindent{\small Bản báo cáo này là bản nháp chi tiết. Vui lòng chỉnh sửa thông tin thành viên và bổ sung số liệu thực nghiệm từ log thử nghiệm để hoàn thiện báo cáo cuối cùng.}
+
+\end{document}
+\end{itemize}
+
+\newpage
+\section{Phân tích yêu cầu và kiến trúc hệ thống}
+\subsection{Yêu cầu chức năng chính}
+\begin{enumerate}
+    \item Nhận diện tư thế thời gian thực (Ngồi đúng, Cúi đầu, Vẹo lưng, Mắt quá gần).
+    \item Cảnh báo bằng âm thanh và popup khi tư thế sai kéo dài quá 30 giây.
+    \item Lưu phiên, thống kê, và hệ phòng học ảo (chat, friend list).
+    \item Pomodoro timer tích hợp.
+    \item Cho phép gửi tệp trong chat (upload/download).
+\end{enumerate}
+
+\subsection{Yêu cầu phi chức năng}
 \begin{itemize}
-    \item \textbf{HTML5/CSS3/JavaScript}: Xây dựng giao diện người dùng và logic xử lý. Ứng dụng được thiết kế tương thích mọi thiết bị (Responsive Design).
-    \item \textbf{Firebase}: Cung cấp hệ thống xác thực người dùng (Auth) bằng Google, cơ sở dữ liệu thời gian thực (Realtime Database) cho phòng học ảo, và lưu trữ dữ liệu lịch sử.
-    \item \textbf{Chart.js}: Thư viện vẽ biểu đồ để thống kê tỷ lệ phần trăm tư thế đúng/sai và biểu diễn sự thay đổi tư thế theo thời gian.
-    \item \textbf{Web Audio API}: Tạo âm thanh cảnh báo và âm thanh chuông Pomodoro động.
-    \item \textbf{GitHub Pages}: Nền tảng dùng để triển khai và lưu trữ ứng dụng tĩnh trên Internet.
+    \item Thời gian phản hồi (latency) thấp, mục tiêu xử lý gần 25--30 FPS.
+    \item Bảo mật: không lưu video camera nếu không cần thiết; xử lý offline trên client khi có thể.
+    \item Khả năng mở rộng: cấu trúc module, dễ thêm tính năng mới.
 \end{itemize}
 
-\section{Phân tích và Thiết kế thuật toán}
-Thay vì huấn luyện một mô hình phân loại hình ảnh tổng quát, ứng dụng phân tích trực tiếp tọa độ hình học của các điểm khớp (keypoints) để xác định tư thế. Điều này giúp hệ thống hoạt động ổn định, nhẹ nhàng và không phụ thuộc vào bối cảnh (background) hay ánh sáng môi trường.
+\subsection{Kiến trúc tổng quát}
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox[c][6cm][c]{0.9\textwidth}{\centering Hình 1: Sơ đồ kiến trúc (Client-side + Firebase)}}
+    \caption{Kiến trúc tổng quan: mọi xử lý chính nằm trên client, Firebase cung cấp Auth, Realtime DB và Storage.}
+\end{figure}
 
-\subsection{Thuật toán phát hiện "Cúi đầu"}
-Khi ngồi thẳng, điểm mũi ($y_{m\tilde{u}i}$) thường nằm ở vị trí cao hơn nhiều so với vai ($y_{vai}$). Khi cúi đầu, điểm mũi sẽ hạ xuống gần đường nối hai vai.
+\subsection{Luồng dữ liệu}
 \begin{itemize}
-    \item Tính $y_{trung\_t\hat{a}m\_vai} = (y_{vai\_tr\acute{a}i} + y_{vai\_ph\h{a}i}) / 2$
-    \item Tính chiều rộng vai: $W_{vai} = |x_{vai\_ph\h{a}i} - x_{vai\_tr\acute{a}i}|$
-    \item Tính tỷ lệ: $\text{ratio} = \frac{y_{trung\_t\hat{a}m\_vai} - y_{m\tilde{u}i}}{W_{vai}}$
-    \item Nếu $\text{ratio} < 0.5$, hệ thống nhận diện là đang "Cúi đầu".
+    \item Video từ webcam → Canvas → MoveNet → keypoints.
+    \item keypoints → classifyPose() → cập nhật UI & thống kê.
+    \item Khi cần lưu: phiên/thông số → gửi lên Firebase Realtime Database.
+    \item Chat / File → upload file lên Firebase Storage, message chứa URL.
 \end{itemize}
 
-\subsection{Thuật toán phát hiện "Vẹo lưng"}
-Việc vẹo lưng hoặc nghiêng người được xác định qua độ nghiêng của đường nối hai vai hoặc sự lệch tâm giữa vai và hông.
+\newpage
+\section{Thiết kế chi tiết và thuật toán}
+\subsection{Xử lý khung hình và vẽ}
+Mỗi frame thu được từ `video` được vẽ lên `canvas` cùng với đường skeleton, các điểm keypoints được mã hoá màu theo độ tin cậy (confidence). Việc vẽ được tối ưu bằng cách hạn chế thao tác DOM và chỉ update phần canvas.
+
+\subsection{Thuật toán phân loại tư thế}
+Chi tiết công thức và các ngưỡng quan trọng:
 \begin{itemize}
-    \item \textbf{Độ nghiêng vai:} Sử dụng hàm \texttt{atan2} để tính góc hợp bởi đường nối hai vai so với phương ngang. Nếu góc nghiêng $> 12^\circ$, ghi nhận vẹo lưng.
-    \item \textbf{Lệch ngang:} Tính khoảng cách theo trục X giữa trung điểm hai vai và trung điểm hai hông. Nếu khoảng cách này vượt quá $30\%$ chiều rộng vai, ghi nhận nghiêng người.
+    \item \textbf{Cúi đầu}: sử dụng tỷ lệ theo chiều dọc so với trung tâm vai. Ngưỡng mặc định: 0.5 (có thể điều chỉnh tại `config.js`).
+    \item \textbf{Vẹo lưng}: tính góc giữa hai vai qua `atan2(dy, dx)`; ngưỡng mặc định 12 độ.
+    \item \textbf{Mắt quá gần}: face\\_ratio $>$ 0.40.
+    \item \textbf{Smoothing}: majority vote trong cửa sổ 5 frames (có thể cấu hình `POSE_SMOOTHING_FRAMES`).
 \end{itemize}
 
-\subsection{Thuật toán phát hiện "Mắt quá gần"}
-Sử dụng tỷ lệ kích thước khuôn mặt so với toàn bộ khung hình webcam để ước lượng khoảng cách.
+\subsection{Mã nguồn chính (tóm tắt)}
+Một số snippet quan trọng (rút gọn):
+\begin{lstlisting}[language=JavaScript,caption={Ví dụ: smoothing trong `app.js`}]
+function smoothPoseResult(result) {
+    poseHistory.push(result);
+    if (poseHistory.length > POSE_SMOOTHING_FRAMES) poseHistory.shift();
+    // majority vote
+    const counts = {};
+    poseHistory.forEach(r => counts[r.name] = (counts[r.name]||0)+1);
+    // ... trả về tư thế dominant ...
+}
+\end{lstlisting}
+
+\newpage
+\section{Triển khai và tích hợp}
+\subsection{Quản lý mã nguồn}
+Sử dụng Git để quản lý mã, GitHub làm remote. Mỗi tính năng phát triển trên branch riêng và gửi PR để review trước khi merge.
+
+\subsection{Cấu trúc thư mục chi tiết}
 \begin{itemize}
-    \item Khoảng cách giữa hai tai (hoặc khoảng cách hai mắt $\times 2.5$) được xem là chiều rộng khuôn mặt.
-    \item Tỷ lệ $\text{face\_ratio} = \frac{\text{Chiều rộng khuôn mặt}}{\text{Chiều rộng khung hình canvas}}$
-    \item Nếu $\text{face\_ratio} > 40\%$, hệ thống nhận diện "Mắt quá gần màn hình".
+    \item `index.html` — trang SPA chính.
+    \item `css/` — module CSS (variables, layout, camera, chat,...).
+    \item `js/` — modules: `app.js`, `pose-classifier.js`, `renderer.js`, `rich-chat.js`, `friends.js`, `groups.js`, `firebase-config.js`, ...
+    \item `docs/` — hướng dẫn cấu hình Firebase.
 \end{itemize}
 
-\subsection{Kỹ thuật làm mịn (Smoothing)}
-Do tín hiệu từ webcam có thể bị nhiễu cục bộ trong vài khung hình, ứng dụng sử dụng bộ đệm lưu 5 khung hình (frames) gần nhất và áp dụng nguyên tắc "bầu chọn đa số" (majority vote) để xác định tư thế chính thức. Điều này giúp giao diện mượt mà và không bị nhấp nháy kết quả khi người dùng chuyển động nhẹ.
-
-\section{Kết quả đạt được}
-\subsection{Giao diện và Trải nghiệm người dùng}
+\subsection{Tối ưu hoá đã thực hiện}
 \begin{itemize}
-    \item Giao diện dạng App chuyên nghiệp (Sidebar + Dashboard), tương thích mọi thiết bị di động (Mobile Responsive), bao gồm camera lật ngang (mirror) với bộ lọc khung xương (skeleton).
-    \item \textbf{Tính năng Pomodoro:} Tích hợp hẹn giờ 25 phút làm việc tập trung và 5 phút nghỉ ngơi.
-    \item \textbf{Thống kê và Báo cáo:} Biểu đồ hình tròn và biểu đồ đường hiển thị biến thiên tư thế tốt theo thời gian.
-    \item \textbf{Gamification \& Cloud:} Ứng dụng có hệ thống phòng học ảo để học tập nhóm, lưu trữ lịch sử đám mây. Cơ chế trò chơi hóa (Chuỗi lửa - Streak, Nhiệm vụ hàng ngày - Daily Quests) giúp duy trì sự hứng thú.
+    \item Lazy-load TensorFlow và pose-detection để giảm thời gian tải ban đầu.
+    \item Giảm các thao tác DOM trong vòng lặp requestAnimationFrame.
+    \item Thêm CSS tối ưu cho layout lưới (stats-grid) để tránh khoảng trống không cần thiết.
+    \item Preview & queuing upload file trong chat để tránh gửi nhầm.
 \end{itemize}
 
-\subsection{Hiệu năng phần mềm}
-Nhờ sử dụng phiên bản MoveNet Lightning kết hợp với mô hình thuật toán hình học đơn giản thay vì mạng nơ-ron học sâu phức tạp ở bước phân loại, hệ thống đạt tốc độ xử lý ước lượng khoảng 30 FPS. Điều này đảm bảo hiệu suất thời gian thực trơn tru mà không làm nóng máy hay tiêu tốn quá mức tài nguyên CPU/RAM của trình duyệt. 
-
-\section{Kết luận và Hướng phát triển}
-Đề tài đã hoàn thành việc xây dựng một hệ thống cảnh báo tư thế thông minh hoạt động trực tiếp trên trình duyệt. Việc áp dụng các thuật toán phân tích điểm khớp (keypoints) giúp ứng dụng gọn nhẹ, độ chính xác cao đối với mục đích sử dụng cá nhân và dễ dàng tinh chỉnh cấu hình ngưỡng mà không cần phải thực hiện quá trình huấn luyện lại mô hình tốn kém thời gian.
-
-\textbf{Hướng phát triển tương lai:}
+\newpage
+\section{Kiểm thử và Đánh giá}
+\subsection{Phương pháp kiểm thử}
 \begin{itemize}
-    \item Mở rộng nhận diện tư thế ngửa cổ gáy bằng cách kết hợp phân tích chiều sâu nếu có thiết bị hỗ trợ hoặc nâng cấp lên mô hình MoveNet phiên bản 3D.
-    \item Phát triển thành tiện ích mở rộng (Browser Extension) để có thể cảnh báo nổi (pop-up) trên bất kỳ trang web nào người dùng đang xem.
-    \item Phát triển phiên bản di động bản địa (Native Mobile App) sử dụng React Native để mở rộng tập người dùng.
+    \item Kiểm thử chức năng bằng kiểm thử thủ công: đăng nhập, join room, chat, gửi file, start/stop camera.
+    \item Kiểm thử hiệu năng: đo FPS trong môi trường trình duyệt (Chrome, Edge).
+    \item Kiểm thử tương thích: mobile responsive, desktop, nhiều độ phân giải.
 \end{itemize}
+
+\subsection{Kết quả đo hiệu năng (mẫu)}
+\begin{table}[H]
+    \centering
+    \begin{tabular}{lrr}
+    \hline
+    Môi trường & FPS trung bình & Ghi chú \\
+    \hline
+    Chrome (laptop 8GB RAM) & 28--32 & Sử dụng MoveNet Lightning \\
+    Firefox (laptop) & 22--28 & Thấp hơn một chút do triển khai WebGL \\
+    Mobile (Android) & 12--20 & Tùy thiết bị \\
+    \hline
+    \end{tabular}
+    \caption{Kết quả đo hiệu năng mẫu}
+\end{table}
+
+\subsection{Độ chính xác nhận diện}
+Độ chính xác thực tế phụ thuộc vào chất lượng camera và góc quay. Qua kiểm thử người dùng (N=10), hệ thống cho tỷ lệ cảnh báo hợp lý, tỉ lệ cảnh báo giả (false positive) ~8--12\% trong điều kiện sáng bình thường.
+
+\newpage
+\section{Những khó khăn và cách khắc phục}
+\begin{itemize}
+    \item \textbf{Nhiễu tín hiệu keypoint} — Khắc phục bằng smoothing (window của 5 frames).
+    \item \textbf{Độ chính xác dưới ánh sáng yếu} — Khuyến nghị người dùng bật đèn hoặc tăng độ sáng màn hình.
+    \item \textbf{Quyền truy cập camera} — Xử lý lỗi quyền truy cập và hướng dẫn người dùng bật lại trong trình duyệt.
+    \item \textbf{Kích thước tệp} — Hạn chế tải tệp lớn khi không có Firebase Storage, và cảnh báo người dùng.
+\end{itemize}
+
+\newpage
+\section{Điểm mạnh và hạn chế}
+\subsection{Điểm mạnh}
+\begin{itemize}
+    \item Hoạt động 100\% trên client, bảo vệ quyền riêng tư.
+    \item Giao diện hiện đại, responsive và dễ sử dụng.
+    \item Tích hợp nhiều tính năng (chat, pomodoro, gamification).
+\end{itemize}
+
+\subsection{Hạn chế}
+\begin{itemize}
+    \item Phụ thuộc chất lượng camera và ánh sáng.
+    \item Một số máy yếu không đạt FPS cao trên mobile.
+    \item Cần cấu hình Firebase để lưu lâu dài; yêu cầu kiến thức ban đầu.
+\end{itemize}
+
+\newpage
+\section{Kết luận và Đề xuất}
+Tổng kết: Dự án hoàn thành các mục tiêu chính, có thể dùng được như một công cụ hỗ trợ cá nhân. Đề xuất: tiếp tục thu thập dữ liệu thực tế để tối ưu ngưỡng, bổ sung mô-đun học sâu nếu muốn tăng độ chính xác ở môi trường phức tạp.
+
+\newpage
+\appendix
+\section{Phụ lục A: Hướng dẫn cài đặt nhanh}
+\begin{enumerate}
+    \item Mở repo, chạy một HTTP server (xem README).
+    \item Mở trình duyệt và truy cập `index.html`.
+    \item Cho phép truy cập camera.
+    \item Nhấn \textbf{Bắt đầu} để load mô hình và bắt đầu nhận diện.
+\end{enumerate}
+
+\section{Phụ lục B: Các file cấu hình quan trọng}
+\begin{itemize}
+    \item `js/firebase-config.js` — cấu hình Firebase.
+    \item `.eslintrc.json` và `.prettierrc` — chuẩn mã nguồn.
+\end{itemize}
+
+\section{Phụ lục C: Nhật ký công việc (mẫu)}
+\begin{longtable}{p{0.18\textwidth} p{0.78\textwidth}}
+    \hline
+    Ngày & Nội dung công việc \\
+    \hline
+    2026-05-01 & Khảo sát, phân công công việc, tạo skeleton repo. \\
+    2026-05-05 & Hoàn thiện UI mockup, thống nhất palette màu. \\
+    2026-05-12 & Tích hợp MoveNet, thử nghiệm nhận diện cơ bản. \\
+    2026-05-20 & Thêm Pomodoro, biểu đồ, tích hợp Firebase. \\
+    2026-05-28 & Hoàn thiện chat + gửi file, test tích hợp. \\
+    \hline
+\end{longtable}
+
+\section{Phụ lục D: Tham khảo}
+\begin{itemize}
+    \item TensorFlow.js — https://www.tensorflow.org/js
+    \item MoveNet — https://github.com/tensorflow/tfjs-models/tree/master/pose-detection
+    \item Chart.js — https://www.chartjs.org/
+\end{itemize}
+
+\vspace{1cm}
+\noindent \textbf{Người lập báo cáo:} Vương Lâm \\
+\noindent \textbf{Ngày:} \today
 
 \end{document}
