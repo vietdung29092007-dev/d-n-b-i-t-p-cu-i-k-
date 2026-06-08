@@ -25,6 +25,8 @@
   <link rel="stylesheet" href="css/chat.css"/>
   <link rel="stylesheet" href="css/history.css"/>
   <link rel="stylesheet" href="css/gamification.css"/>
+  <link rel="stylesheet" href="css/friends.css"/>
+  <link rel="stylesheet" href="css/groups.css"/>
 </head>
 <body>
 
@@ -222,8 +224,13 @@
         <!-- Card: Phòng học ảo (chỉ hiện khi đăng nhập) -->
         <div class="dash-card community-card hidden" id="network-panel">
           <div class="community-tabs">
-            <div class="community-tab active" onclick="switchCommunityTab('room')">🌐 Phòng học</div>
-            <div class="community-tab" onclick="switchCommunityTab('history')">📚 Lịch sử</div>
+            <div class="community-tab active" data-tab="room" onclick="switchCommunityTab('room')">🌐 Phòng</div>
+            <div class="community-tab" data-tab="friends" onclick="switchCommunityTab('friends')">
+              👥 Bạn bè
+              <span class="friend-req-badge hidden" id="friend-req-badge">0</span>
+            </div>
+            <div class="community-tab" data-tab="groups" onclick="switchCommunityTab('groups')">💬 Nhóm</div>
+            <div class="community-tab" data-tab="history" onclick="switchCommunityTab('history')">📚 Lịch sử</div>
           </div>
 
           <!-- Tab Phòng học -->
@@ -267,11 +274,108 @@
               <p class="log-empty">Chưa có phiên nào...</p>
             </div>
           </div>
+
+          <!-- Tab Kết Bạn -->
+          <div class="community-pane" id="pane-friends">
+            <div class="friends-panel">
+              <button class="btn-find-friend" onclick="openFindFriendModal()">
+                🔍 Tìm thêm bạn bè
+              </button>
+
+              <!-- Lời mời đến -->
+              <div class="friend-requests-section hidden" id="friend-requests-section">
+                <div class="friend-requests-title">🔔 Lời mời kết bạn</div>
+                <div id="friend-requests-list"></div>
+              </div>
+
+              <!-- Danh sách bạn bè -->
+              <div class="friend-list-section">
+                <div class="friend-list-title">👤 Bạn bè của tôi</div>
+                <div class="friend-list" id="friend-list">
+                  <p class="log-empty">Chưa có bạn bè...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab Nhóm Chat Riêng -->
+          <div class="community-pane" id="pane-groups">
+            <div class="groups-panel">
+              <button class="btn-create-group" onclick="openCreateGroupModal()">
+                ➕ Tạo nhóm mới
+              </button>
+
+              <!-- Danh sách nhóm -->
+              <div class="group-list-section">
+                <div class="group-list-title">💬 Nhóm của tôi</div>
+                <div id="group-list">
+                  <p class="log-empty">Chưa có nhóm nào...</p>
+                </div>
+              </div>
+
+              <!-- Placeholder khi chưa chọn nhóm -->
+              <div class="group-chat-placeholder" id="group-chat-placeholder">
+                <span class="ph-icon">💬</span>
+                <span>Chọn nhóm để bắt đầu chat</span>
+              </div>
+
+              <!-- Chat nhóm -->
+              <div class="group-chat-section hidden" id="group-chat-section">
+                <div class="group-chat-header">
+                  <span class="group-chat-name" id="group-chat-header-name">👥 Nhóm</span>
+                  <button class="btn-leave-group"
+                    onclick="activeGroupId && leaveGroup(activeGroupId)">Rời nhóm</button>
+                </div>
+                <div class="group-chat-messages" id="group-chat-messages"></div>
+                <div class="group-chat-input-wrap">
+                  <input type="text" class="group-chat-input" id="group-chat-input"
+                         placeholder="Nhắn tin nhóm..." maxlength="300"/>
+                  <button class="btn-group-send" onclick="sendGroupMessage()">&#x27A4;</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
 
       </div><!-- end dashboard-grid -->
     </main>
   </div><!-- end app-shell -->
+
+  <!-- ========== MODAL: Tìm kiếm Bạn bè ========== -->
+  <div class="modal-overlay hidden" id="modal-find-friend">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span class="modal-title">🔍 Tìm kiếm Bạn bè</span>
+        <button class="modal-close" onclick="closeFindFriendModal()">✕</button>
+      </div>
+      <input type="text" class="modal-search-input" id="search-user-input"
+             placeholder="Nhập tên người dùng..."
+             oninput="onSearchInput()"/>
+      <div class="search-results" id="search-results">
+        <p class="log-empty">Nhập tên để tìm kiếm...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== MODAL: Tạo nhóm ========== -->
+  <div class="modal-overlay hidden" id="modal-create-group">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span class="modal-title">➕ Tạo Nhóm Chat</span>
+        <button class="modal-close" onclick="closeCreateGroupModal()">✕</button>
+      </div>
+      <input type="text" class="modal-group-name-input" id="group-name-input"
+             placeholder="Tên nhóm..."/>
+      <div style="font-size:0.7rem;font-weight:700;color:var(--text-secondary);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em;">
+        👥 Chọn thành viên
+      </div>
+      <div class="friend-picker" id="friend-picker">
+        <p class="log-empty">Chưa có bạn bè...</p>
+      </div>
+      <button class="btn-create-group-submit" onclick="createGroup()">🚀 Tạo nhóm</button>
+    </div>
+  </div>
 
   <!-- ========== THƯ VIỆN ========== -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -297,6 +401,8 @@
   <script src="js/database.js"></script>
   <script src="js/network.js"></script>
   <script src="js/chat.js"></script>
+  <script src="js/friends.js"></script>
+  <script src="js/groups.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

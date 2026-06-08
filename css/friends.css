@@ -1,0 +1,380 @@
+/* ================================================
+   friends.css — Kết bạn & Danh sách bạn bè
+   ================================================ */
+
+/* ----- Panel Bạn bè ----- */
+.friends-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  height: 100%;
+}
+
+/* ----- Nút Tìm bạn ----- */
+.btn-find-friend {
+  width: 100%;
+  padding: 0.5rem 0.8rem;
+  background: linear-gradient(135deg, rgba(0,212,255,0.15), rgba(0,255,136,0.1));
+  border: 1px dashed rgba(0,212,255,0.4);
+  border-radius: 10px;
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'DM Sans', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+.btn-find-friend:hover {
+  background: rgba(0,212,255,0.2);
+  border-color: var(--accent);
+  box-shadow: var(--glow-cyan);
+}
+
+/* ----- Badge lời mời ----- */
+.friend-req-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-red);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  margin-left: 0.3rem;
+  animation: pulse-badge 1.5s infinite;
+}
+@keyframes pulse-badge {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+/* ----- Section lời mời đến ----- */
+.friend-requests-section {
+  background: rgba(255, 71, 87, 0.05);
+  border: 1px solid rgba(255,71,87,0.2);
+  border-radius: 10px;
+  padding: 0.6rem;
+}
+.friend-requests-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--accent-red);
+  margin-bottom: 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+/* ----- Mỗi lời mời ----- */
+.friend-req-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.5rem;
+  background: var(--bg-card);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  margin-bottom: 0.35rem;
+}
+.friend-req-item:last-child { margin-bottom: 0; }
+
+.friend-req-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--bg-main);
+  flex-shrink: 0;
+}
+.friend-req-name {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.friend-req-actions {
+  display: flex;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+.btn-accept, .btn-decline {
+  padding: 0.25rem 0.5rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'DM Sans', sans-serif;
+}
+.btn-accept {
+  background: rgba(0,255,136,0.15);
+  color: var(--accent-green);
+  border: 1px solid rgba(0,255,136,0.3);
+}
+.btn-accept:hover {
+  background: rgba(0,255,136,0.25);
+  box-shadow: var(--glow-green);
+}
+.btn-decline {
+  background: rgba(255,71,87,0.1);
+  color: var(--accent-red);
+  border: 1px solid rgba(255,71,87,0.25);
+}
+.btn-decline:hover {
+  background: rgba(255,71,87,0.2);
+}
+
+/* ----- Danh sách bạn bè ----- */
+.friend-list-section {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.friend-list-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.friend-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  overflow-y: auto;
+  flex: 1;
+}
+.friend-list::-webkit-scrollbar { width: 4px; }
+.friend-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+.friend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.5rem 0.6rem;
+  background: var(--bg-card);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  transition: border-color 0.2s;
+  cursor: pointer;
+}
+.friend-item:hover {
+  border-color: rgba(0,212,255,0.25);
+}
+
+.friend-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.friend-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--bg-main);
+}
+.friend-online-dot {
+  position: absolute;
+  bottom: -1px; right: -1px;
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  border: 2px solid var(--bg-card);
+  background: var(--text-secondary);
+}
+.friend-online-dot.online { background: var(--accent-green); box-shadow: var(--glow-green); }
+
+.friend-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+.friend-name {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.friend-status-text {
+  font-size: 0.64rem;
+  color: var(--text-secondary);
+  font-family: 'Space Mono', monospace;
+}
+
+.btn-chat-friend {
+  padding: 0.25rem 0.45rem;
+  border: 1px solid rgba(0,212,255,0.3);
+  border-radius: 6px;
+  background: rgba(0,212,255,0.08);
+  color: var(--accent);
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  font-family: 'DM Sans', sans-serif;
+}
+.btn-chat-friend:hover {
+  background: rgba(0,212,255,0.2);
+  box-shadow: var(--glow-cyan);
+}
+
+/* ================================================
+   MODAL — Tìm kiếm bạn bè
+   ================================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(4px);
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+.modal-overlay.hidden { display: none; }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal-box {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.4rem;
+  width: 360px;
+  max-width: 92vw;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5), var(--glow-cyan);
+  animation: slideUp 0.25s ease;
+}
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.modal-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: color 0.2s;
+  padding: 0.2rem;
+}
+.modal-close:hover { color: var(--accent-red); }
+
+.modal-search-input {
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem;
+  outline: none;
+  transition: border-color 0.2s;
+  margin-bottom: 0.8rem;
+}
+.modal-search-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(0,212,255,0.1);
+}
+.modal-search-input::placeholder { color: var(--text-secondary); }
+
+.search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: 240px;
+  overflow-y: auto;
+}
+.search-results::-webkit-scrollbar { width: 4px; }
+.search-results::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+.search-result-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.6rem;
+  background: var(--bg-card);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  transition: border-color 0.2s;
+}
+.search-result-item:hover { border-color: rgba(0,212,255,0.25); }
+
+.search-result-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--bg-main);
+  flex-shrink: 0;
+}
+.search-result-name {
+  flex: 1;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.btn-add-friend {
+  padding: 0.28rem 0.6rem;
+  border: 1px solid rgba(0,212,255,0.3);
+  border-radius: 6px;
+  background: rgba(0,212,255,0.1);
+  color: var(--accent);
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  font-family: 'DM Sans', sans-serif;
+}
+.btn-add-friend:hover {
+  background: rgba(0,212,255,0.22);
+  box-shadow: var(--glow-cyan);
+}
+.btn-add-friend.sent {
+  background: rgba(0,255,136,0.1);
+  color: var(--accent-green);
+  border-color: rgba(0,255,136,0.3);
+  cursor: default;
+}
+.btn-add-friend.already {
+  background: rgba(255,71,87,0.08);
+  color: var(--text-secondary);
+  border-color: var(--border);
+  cursor: default;
+}

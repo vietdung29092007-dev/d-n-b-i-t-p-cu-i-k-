@@ -1,0 +1,334 @@
+/* ================================================
+   groups.css — Nhóm Chat Riêng
+   ================================================ */
+
+/* ----- Panel Nhóm ----- */
+.groups-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  height: 100%;
+}
+
+/* ----- Nút Tạo nhóm ----- */
+.btn-create-group {
+  width: 100%;
+  padding: 0.5rem 0.8rem;
+  background: linear-gradient(135deg, rgba(0,255,136,0.12), rgba(0,212,255,0.08));
+  border: 1px dashed rgba(0,255,136,0.4);
+  border-radius: 10px;
+  color: var(--accent-green);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'DM Sans', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+.btn-create-group:hover {
+  background: rgba(0,255,136,0.2);
+  border-color: var(--accent-green);
+  box-shadow: var(--glow-green);
+}
+
+/* ----- Danh sách nhóm ----- */
+.group-list-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.group-list-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.2rem;
+}
+
+.group-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.5rem 0.6rem;
+  background: var(--bg-card);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.group-item:hover, .group-item.active {
+  border-color: rgba(0,255,136,0.3);
+  background: rgba(0,255,136,0.04);
+}
+.group-item.active {
+  border-color: var(--accent-green);
+  box-shadow: 0 0 0 1px rgba(0,255,136,0.15);
+}
+
+.group-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(0,212,255,0.2), rgba(0,255,136,0.15));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+  border: 1px solid rgba(0,212,255,0.2);
+}
+
+.group-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+.group-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.group-member-count {
+  font-size: 0.64rem;
+  color: var(--text-secondary);
+  font-family: 'Space Mono', monospace;
+}
+
+.group-unread {
+  background: var(--accent);
+  color: var(--bg-main);
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 0.15rem 0.4rem;
+  border-radius: 99px;
+  flex-shrink: 0;
+  display: none;
+}
+.group-unread.visible { display: block; }
+
+/* ----- Cửa sổ chat nhóm ----- */
+.group-chat-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg-card);
+  min-height: 0;
+}
+
+.group-chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.7rem;
+  background: rgba(0,255,136,0.05);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.group-chat-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent-green);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.btn-leave-group {
+  padding: 0.2rem 0.45rem;
+  border: 1px solid rgba(255,71,87,0.3);
+  border-radius: 6px;
+  background: rgba(255,71,87,0.08);
+  color: var(--accent-red);
+  font-size: 0.65rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'DM Sans', sans-serif;
+}
+.btn-leave-group:hover {
+  background: rgba(255,71,87,0.18);
+}
+
+.group-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-height: 0;
+}
+.group-chat-messages::-webkit-scrollbar { width: 4px; }
+.group-chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+.group-chat-input-wrap {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.5rem 0.6rem;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.group-chat-input {
+  flex: 1;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-main);
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.78rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.group-chat-input:focus {
+  border-color: var(--accent-green);
+}
+.group-chat-input::placeholder { color: var(--text-secondary); }
+
+.btn-group-send {
+  padding: 0.45rem 0.65rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent-green);
+  color: var(--bg-main);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 700;
+}
+.btn-group-send:hover {
+  filter: brightness(1.15);
+  box-shadow: var(--glow-green);
+}
+
+/* placeholder khi chưa chọn nhóm */
+.group-chat-placeholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  padding: 1rem;
+  text-align: center;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+}
+.group-chat-placeholder .ph-icon {
+  font-size: 2rem;
+  opacity: 0.5;
+}
+
+/* ================================================
+   MODAL — Tạo nhóm
+   ================================================ */
+.friend-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: 190px;
+  overflow-y: auto;
+  margin-bottom: 0.7rem;
+}
+.friend-picker::-webkit-scrollbar { width: 4px; }
+.friend-picker::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+.friend-pick-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.45rem 0.6rem;
+  background: var(--bg-card);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+.friend-pick-item:hover { border-color: rgba(0,255,136,0.3); }
+.friend-pick-item.selected {
+  background: rgba(0,255,136,0.08);
+  border-color: var(--accent-green);
+}
+
+.friend-pick-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--bg-main);
+  flex-shrink: 0;
+}
+.friend-pick-name {
+  flex: 1;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.friend-pick-check {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 2px solid var(--border);
+  background: var(--bg-main);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  color: transparent;
+}
+.friend-pick-item.selected .friend-pick-check {
+  background: var(--accent-green);
+  border-color: var(--accent-green);
+  color: var(--bg-main);
+}
+
+.modal-group-name-input {
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem;
+  outline: none;
+  transition: border-color 0.2s;
+  margin-bottom: 0.6rem;
+}
+.modal-group-name-input:focus {
+  border-color: var(--accent-green);
+}
+.modal-group-name-input::placeholder { color: var(--text-secondary); }
+
+.btn-create-group-submit {
+  width: 100%;
+  padding: 0.6rem;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent-green), #00c9a7);
+  color: var(--bg-main);
+  font-weight: 700;
+  font-size: 0.84rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'DM Sans', sans-serif;
+}
+.btn-create-group-submit:hover {
+  filter: brightness(1.1);
+  box-shadow: var(--glow-green);
+}

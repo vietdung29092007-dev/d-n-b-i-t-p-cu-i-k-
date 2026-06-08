@@ -82,9 +82,16 @@ function onAuthSuccess(user) {
   // Tải lịch sử học tập
   loadStudyHistory(user.uid);
 
+  // Lưu profile lên Firebase để có thể tìm kiếm
+  if (typeof saveUserProfile === 'function') saveUserProfile(user);
+
   // Tự động vào phòng mặc định + bật chat
   joinRoom('general');
   initChat('general');
+
+  // Khởi tạo Kết bạn & Nhóm
+  if (typeof initFriends === 'function') initFriends();
+  if (typeof initGroups  === 'function') initGroups();
 
   // Khởi tạo Gamification (Streak & Quests)
   if (typeof initGamification === 'function') {
@@ -111,11 +118,17 @@ function onAuthSignedOut() {
 function switchCommunityTab(tab) {
   // Cập nhật nút tab
   document.querySelectorAll('.community-tab').forEach(el => {
-    el.classList.toggle('active', el.dataset.tab === tab ||
-      (tab === 'room'    && el.textContent.includes('Phòng')) ||
-      (tab === 'history' && el.textContent.includes('Lịch')));
+    el.classList.toggle('active', el.dataset.tab === tab);
   });
-  // Chuyển pane
-  document.getElementById('pane-room')   ?.classList.toggle('active', tab === 'room');
-  document.getElementById('pane-history')?.classList.toggle('active', tab === 'history');
+  // Chuyển pane — ẩn hết rồi hiện đúng
+  ['pane-room', 'pane-history', 'pane-friends', 'pane-groups'].forEach(id => {
+    document.getElementById(id)?.classList.remove('active');
+  });
+  const paneMap = {
+    room:    'pane-room',
+    history: 'pane-history',
+    friends: 'pane-friends',
+    groups:  'pane-groups'
+  };
+  if (paneMap[tab]) document.getElementById(paneMap[tab])?.classList.add('active');
 }
