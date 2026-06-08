@@ -17,10 +17,10 @@ const POSE_CONFIG = {
 // ---- Ngưỡng phát hiện tư thế sai ----
 // Có thể điều chỉnh các giá trị này để phù hợp với góc camera
 const POSE_THRESHOLDS = {
-  headBowRatio: 0.5,         // Cúi đầu khi (khoảng cách mũi-vai / rộng vai) < ngưỡng
-  shoulderTiltAngle: 12,     // Vẹo vai khi góc nghiêng > ngưỡng (độ)
-  lateralOffsetRatio: 0.3,   // Nghiêng người khi lệch ngang vai-hông > ngưỡng
-  faceCloseRatio: 0.40,      // Mắt quá gần khi rộng mặt / rộng canvas > ngưỡng
+  headBowRatio: 0.35,        // Giảm độ nhạy: Cúi đầu sâu hơn mới bị cảnh báo (cũ: 0.5)
+  shoulderTiltAngle: 8,      // Tăng độ nhạy: Vẹo vai góc nhỏ hơn đã bị cảnh báo (cũ: 12)
+  lateralOffsetRatio: 0.2,   // Tăng độ nhạy: Nghiêng người ít hơn đã bị cảnh báo (cũ: 0.3)
+  faceCloseRatio: 0.32,      // Tăng độ nhạy: Gần một chút đã bị cảnh báo (cũ: 0.4)
   minKeypointScore: 0.3,     // Độ tin cậy tối thiểu của keypoint
 };
 
