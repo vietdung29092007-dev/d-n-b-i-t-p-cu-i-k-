@@ -132,18 +132,18 @@
     </div>
   </div>
 
-  
-  <!-- ========== APP HEADER ========== -->
-  <header class="app-header">
-    <div class="header-left">
-      <div class="app-logo">
+  <!-- ========== APP SHELL ========== -->
+  <div class="app-shell">
+
+    <!-- ===== SIDEBAR TRÁI ===== -->
+    <aside class="sidebar">
+
+      <!-- Logo -->
+      <div class="sidebar-logo">
         <span class="logo-icon">🧘</span>
         <span class="logo-text">Pose<span class="accent">Alert</span></span>
       </div>
-      <div class="status-indicator"><div class="status-dot" id="status-dot"></div>
-      <span class="session-clock"id="session-time">Phiên: 00:00:00</span>
-    </div>
-    <div class="header-right">
+
       <!-- Theme Switcher -->
       <div class="theme-switcher">
         <span class="theme-label">🎨 Giao diện</span>
@@ -159,27 +159,7 @@
           </button>
         </div>
       </div>
-      <!-- Auth -->
-      <div class="sidebar-auth" id="auth-section">
-        <button class="btn-sign-in" id="btn-sign-in" onclick="signInWithGoogle()">
-          <span class="google-icon">G</span> Đăng nhập Google
-        </button>
-        <div class="user-info hidden" id="user-info">
-          <img class="user-avatar" id="user-avatar" src="" alt=""/>
-          <div class="user-details">
-            <span class="user-name" id="user-name"></span>
-            <span class="user-streak" id="user-streak">🔥 0 Ngày</span>
-            <button class="btn-sign-out" onclick="signOut()">Đăng xuất</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </header>
 
-  <!-- ========== APP BODY ========== -->
-  <div class="app-body">
-    <!-- ===== PANEL TRÁI ===== -->
-    <aside class="panel-left">
       <!-- Camera -->
       <div class="sidebar-section">
         <div class="section-label">📷 Camera AI</div>
@@ -238,16 +218,6 @@
         <div class="pose-results" id="pose-results"></div>
       </div>
 
-      <!-- Timer Cảnh Báo -->
-      <div class="panel-section">
-        <div class="alert-timer-compact" id="alert-timer-section">
-            <span class="timer-label-compact">⏱ Tư thế sai:</span>
-            <div class="timer-bar-wrap" style="width:120px;">
-              <div class="timer-bar" id="timer-bar"></div>
-            </div>
-            <span class="timer-countdown" id="timer-countdown">0/30s</span></div>
-      </div>
-
       <!-- Pomodoro -->
       <div class="sidebar-section">
         <div class="section-label">🍅 Pomodoro</div>
@@ -263,21 +233,52 @@
           <div class="pomodoro-cycles">Chu kỳ: <strong id="pomo-cycles">0</strong></div>
         </div>
       </div>
-    </aside>
 
-    <!-- ===== NỘI DUNG CHÍNH (PANEL PHẢI) ===== -->
-    <main class="panel-right">
-      <!-- Tabs -->
-      <div class="main-tabs">
-        <button class="main-tab active" data-maintab="stats" onclick="switchMainTab('stats')">📊 Thống kê</button>
-        <button class="main-tab" data-maintab="community" onclick="switchMainTab('community')">👥 Cộng đồng</button>
+      <!-- Auth -->
+      <div class="sidebar-auth" id="auth-section">
+        <button class="btn-sign-in" id="btn-sign-in" onclick="signInWithGoogle()">
+          <span class="google-icon">G</span> Đăng nhập Google
+        </button>
+        <div class="user-info hidden" id="user-info">
+          <img class="user-avatar" id="user-avatar" src="" alt=""/>
+          <div class="user-details">
+            <span class="user-name" id="user-name"></span>
+            <span class="user-streak" id="user-streak">🔥 0 Ngày</span>
+            <button class="btn-sign-out" onclick="signOut()">Đăng xuất</button>
+          </div>
+        </div>
       </div>
 
-      <!-- Tab Content: Thống kê -->
-      <div class="main-pane active" id="pane-stats">
-        <div class="stats-grid">
-          <!-- Card: Thống kê nhanh -->
-          <div class="dash-card">
+    </aside>
+
+    <!-- ===== NỘI DUNG CHÍNH ===== -->
+    <main class="main-content">
+
+      <!-- === HEADER TOPBAR === -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="status-indicator">
+            <div class="status-dot" id="status-dot"></div>
+            <span id="status-label">Chờ khởi động</span>
+          </div>
+          <span class="session-clock" id="session-time">Phiên: 00:00:00</span>
+        </div>
+        <div class="topbar-right">
+          <div class="alert-timer-compact" id="alert-timer-section">
+            <span class="timer-label-compact">⏱ Tư thế sai:</span>
+            <div class="timer-bar-wrap" style="width:120px;">
+              <div class="timer-bar" id="timer-bar"></div>
+            </div>
+            <span class="timer-countdown" id="timer-countdown">0/30s</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- === DASHBOARD GRID === -->
+      <div class="dashboard-grid">
+
+        <!-- Card: Thống kê nhanh -->
+        <div class="dash-card">
           <div class="dash-card-title">📊 Thống kê phiên</div>
           <div class="quick-stats">
             <div class="stat-card good">
@@ -327,11 +328,7 @@
             <p class="log-empty">Chưa có cảnh báo nào...</p>
           </div>
         </div>
-        </div>
-      </div>
 
-      <!-- Tab Content: Cộng đồng -->
-      <div class="main-pane" id="pane-community">
         <!-- Card: Phòng học ảo (chỉ hiện khi đăng nhập) -->
         <div class="dash-card community-card hidden" id="network-panel">
           <div class="community-tabs">
@@ -578,10 +575,8 @@
         </div>
 
       </div><!-- end dashboard-grid -->
-      </div>
     </main>
-  </div>
-<!-- end app-shell -->
+  </div><!-- end app-shell -->
 
   <!-- ========== MODAL: Tìm kiếm Bạn bè ========== -->
   <div class="modal-overlay hidden" id="modal-find-friend">
