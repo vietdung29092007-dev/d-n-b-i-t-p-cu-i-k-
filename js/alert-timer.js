@@ -141,31 +141,4 @@ function closeAlert() {
 // Âm thanh chuông cảnh báo
 // ------------------------------------------------------------
 
-/**
- * playAlertSound()
- * Tạo âm thanh chuông nhẹ bằng Web Audio API (không cần file .mp3).
- * Âm thanh: nốt A5 (880 Hz) giảm dần xuống A4 (440 Hz), kéo dài 1 giây.
- */
-function playAlertSound() {
-  try {
-    const audioCtx   = new (window.AudioContext || window.webkitAudioContext)();
-    const oscillator = audioCtx.createOscillator();
-    const gainNode   = audioCtx.createGain();
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-
-    oscillator.type = "sine";
-    oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.5);
-
-    gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.1);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.0);
-
-    oscillator.start(audioCtx.currentTime);
-    oscillator.stop(audioCtx.currentTime + 1.0);
-  } catch (e) {
-    console.warn("Không thể phát âm thanh:", e);
-  }
-}
+// Đã chuyển playAlertSound sang js/audio.js

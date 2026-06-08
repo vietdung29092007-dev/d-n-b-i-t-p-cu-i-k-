@@ -99,42 +99,7 @@ function showPomodoroAlert(title, message) {
   }
 }
 
-// ------------------------------------------------------------
-// Âm thanh Pomodoro
-// ------------------------------------------------------------
-
-/**
- * playPomodoroSound(type)
- * Phát 3 nốt ngắn bằng Web Audio API.
- * - "break" (nghỉ): nốt đi lên (C5 → E5 → G5)
- * - "work" (học):   nốt đi xuống (G5 → E5 → C5)
- */
-function playPomodoroSound(type) {
-  try {
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const gainNode = audioCtx.createGain();
-    gainNode.connect(audioCtx.destination);
-
-    const notes = type === "break" ? [523, 659, 784] : [784, 659, 523];
-
-    notes.forEach((freq, i) => {
-      const osc = audioCtx.createOscillator();
-      osc.connect(gainNode);
-      osc.type            = "sine";
-      osc.frequency.value = freq;
-
-      const t = audioCtx.currentTime + i * 0.25;
-      gainNode.gain.setValueAtTime(0.2, t);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
-
-      osc.start(t);
-      osc.stop(t + 0.25);
-    });
-  } catch (e) {
-    console.warn("Không thể phát âm thanh Pomodoro:", e);
-  }
-}
-
+// Đã chuyển playPomodoroSound sang js/audio.js
 // ------------------------------------------------------------
 // Hàm nội bộ
 // ------------------------------------------------------------

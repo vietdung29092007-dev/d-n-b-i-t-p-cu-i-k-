@@ -238,6 +238,9 @@ function renderOrUpdateMessage(msgId, msg) {
   // Tự động cuộn xuống khi nhận tin mới hoặc nếu tin nhắn do chính mình gửi
   if (isNew) {
     container.scrollTop = container.scrollHeight;
+    if (!isMe && typeof playMessageSound === "function") {
+      playMessageSound();
+    }
   }
 
   // Dọn dẹp tin nhắn cũ để giảm lag

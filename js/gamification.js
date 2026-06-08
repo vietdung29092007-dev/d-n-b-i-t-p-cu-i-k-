@@ -114,6 +114,7 @@ async function updateGamification(sessionData) {
       if (todayQuests.quest_duration.current >= todayQuests.quest_duration.target) {
         todayQuests.quest_duration.current = todayQuests.quest_duration.target;
         todayQuests.quest_duration.completed = true;
+        if (typeof playSuccessSound === "function") playSuccessSound();
       }
       isQuestsUpdated = true;
     }
@@ -124,6 +125,7 @@ async function updateGamification(sessionData) {
         todayQuests.quest_posture.current = 1;
         todayQuests.quest_posture.completed = true;
         isQuestsUpdated = true;
+        if (typeof playSuccessSound === "function") playSuccessSound();
       }
     }
 
@@ -133,6 +135,7 @@ async function updateGamification(sessionData) {
       if (todayQuests.quest_pomodoro.current >= todayQuests.quest_pomodoro.target) {
         todayQuests.quest_pomodoro.current = todayQuests.quest_pomodoro.target;
         todayQuests.quest_pomodoro.completed = true;
+        if (typeof playSuccessSound === "function") playSuccessSound();
       }
       isQuestsUpdated = true;
     }
