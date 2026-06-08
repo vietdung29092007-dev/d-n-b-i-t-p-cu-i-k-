@@ -31,6 +31,10 @@ let activeCallRef     = null;   // Firebase listener cuộc gọi đang active
 let ringtoneAudio     = null;   // Audio ringing
 let isScreenSharing   = false;  // Trạng thái share screen
 let screenStream      = null;   // Stream capture màn hình
+let isCallMinimized   = true;   // PiP: mặc định mở ở chế độ nhỏ
+let isDraggingCall    = false;  // Đang kéo thả cửa sổ gọi
+let dragOffsetX       = 0;
+let dragOffsetY       = 0;
 
 /* =============================================
    KHỞI TẠO — lắng nghe cuộc gọi đến
@@ -441,6 +445,8 @@ function cleanupCall() {
   // Reset timer display
   const timerEl = document.getElementById('call-timer');
   if (timerEl) timerEl.textContent = '00:00';
+  const miniTimerEl = document.getElementById('call-mini-timer');
+  if (miniTimerEl) miniTimerEl.textContent = '00:00';
 }
 
 /* =============================================
@@ -652,6 +658,15 @@ function showCallingOverlay(name, avatar, type) {
 
   updateCallControls();
   overlay.classList.remove('hidden');
+
+  // Mặc định mở ở chế độ PiP (minimized)
+  isCallMinimized = true;
+  overlay.classList.add('minimized');
+  overlay.style.removeProperty('top');
+  overlay.style.removeProperty('left');
+  overlay.style.removeProperty('bottom');
+  overlay.style.removeProperty('right');
+  initCallDrag();
 }
 
 function showCallActiveOverlay(name, avatar, type) {
@@ -668,12 +683,31 @@ function showCallActiveOverlay(name, avatar, type) {
 
   updateCallControls();
   overlay.classList.remove('hidden');
+
+  // Mặc định mở ở chế độ PiP (minimized)
+  isCallMinimized = true;
+  overlay.classList.add('minimized');
+  overlay.style.removeProperty('top');
+  overlay.style.removeProperty('left');
+  overlay.style.removeProperty('bottom');
+  overlay.style.removeProperty('right');
+  initCallDrag();
   startCallTimer();
 }
 
 function hideCallOverlay() {
   const overlay = document.getElementById('call-overlay');
-  if (overlay) overlay.classList.add('hidden');
+  if (overlay) {
+    overlay.classList.add('hidden');
+    overlay.classList.remove('minimized');
+    // Reset vị trí kéo thả
+    overlay.style.removeProperty('top');
+    overlay.style.removeProperty('left');
+    overlay.style.removeProperty('bottom');
+    overlay.style.removeProperty('right');
+  }
+  isCallMinimized = true;
+  destroyCallDrag();
 }
 
 function updateCallStatus(text) {
@@ -705,6 +739,9 @@ function toggleMic() {
   isMicMuted = !isMicMuted;
   localStream.getAudioTracks().forEach(t => { t.enabled = !isMicMuted; });
   updateCallControls();
+  // Cập nhật mini mic button
+  const miniMic = document.getElementById('mini-btn-mic');
+  if (miniMic) miniMic.textContent = isMicMuted ? '🔇' : '🎙️';
 }
 
 function toggleCam() {
@@ -732,6 +769,9 @@ function startCallTimer() {
       : `${pad(m)}:${pad(s)}`;
     const timerEl = document.getElementById('call-timer');
     if (timerEl) timerEl.textContent = timeStr;
+    // Cập nhật mini-timer cho chế độ PiP
+    const miniTimer = document.getElementById('call-mini-timer');
+    if (miniTimer) miniTimer.textContent = timeStr;
   }, 1000);
 }
 
@@ -872,4 +912,115 @@ function updateScreenShareButtonUI(sharing) {
       : '<span class="ctrl-icon">🖥️</span> Chia sẻ';
     btn.classList.toggle('active-on', sharing);
   }
+}
+
+/* =============================================
+   TOGGLE PiP (Minimize / Expand)
+   ============================================= */
+function toggleCallPiP() {
+  const overlay = document.getElementById('call-overlay');
+  if (!overlay || overlay.classList.contains('hidden')) return;
+
+  isCallMinimized = !isCallMinimized;
+
+  if (isCallMinimized) {
+    // Chuyển sang minimized
+    overlay.classList.add('minimized');
+    // Reset vị trí về góc phải dưới
+    overlay.style.removeProperty('top');
+    overlay.style.removeProperty('left');
+    overlay.style.bottom = '1.5rem';
+    overlay.style.right = '1.5rem';
+    initCallDrag();
+  } else {
+    // Chuyển sang fullscreen
+    overlay.classList.remove('minimized');
+    // Reset inline styles
+    overlay.style.removeProperty('top');
+    overlay.style.removeProperty('left');
+    overlay.style.removeProperty('bottom');
+    overlay.style.removeProperty('right');
+    destroyCallDrag();
+  }
+}
+
+/* =============================================
+   DRAG & DROP cho cửa sổ PiP
+   ============================================= */
+let _callDragHandlers = null; // Lưu handlers để cleanup
+
+function initCallDrag() {
+  const overlay = document.getElementById('call-overlay');
+  if (!overlay) return;
+
+  // Cleanup handlers cũ nếu có
+  destroyCallDrag();
+
+  const header = overlay.querySelector('.call-header');
+  if (!header) return;
+
+  function onMouseDown(e) {
+    if (!overlay.classList.contains('minimized')) return;
+    // Bỏ qua click vào nút
+    if (e.target.closest('button')) return;
+
+    isDraggingCall = true;
+    const rect = overlay.getBoundingClientRect();
+    dragOffsetX = e.clientX - rect.left;
+    dragOffsetY = e.clientY - rect.top;
+    overlay.style.transition = 'none'; // Tắt transition khi kéo
+    e.preventDefault();
+  }
+
+  function onMouseMove(e) {
+    if (!isDraggingCall) return;
+    e.preventDefault();
+
+    let newLeft = e.clientX - dragOffsetX;
+    let newTop  = e.clientY - dragOffsetY;
+
+    // Giới hạn trong viewport
+    const maxX = window.innerWidth - overlay.offsetWidth;
+    const maxY = window.innerHeight - overlay.offsetHeight;
+    newLeft = Math.max(0, Math.min(newLeft, maxX));
+    newTop  = Math.max(0, Math.min(newTop, maxY));
+
+    // Chuyển từ bottom/right sang top/left khi drag
+    overlay.style.removeProperty('bottom');
+    overlay.style.removeProperty('right');
+    overlay.style.left = newLeft + 'px';
+    overlay.style.top  = newTop + 'px';
+  }
+
+  function onMouseUp() {
+    if (!isDraggingCall) return;
+    isDraggingCall = false;
+    overlay.style.transition = ''; // Khôi phục transition
+  }
+
+  // Double-click để expand
+  function onDblClick(e) {
+    if (!overlay.classList.contains('minimized')) return;
+    if (e.target.closest('button')) return;
+    toggleCallPiP();
+  }
+
+  header.addEventListener('mousedown', onMouseDown);
+  document.addEventListener('mousemove', onMouseMove);
+  document.addEventListener('mouseup', onMouseUp);
+  overlay.addEventListener('dblclick', onDblClick);
+
+  // Lưu lại để cleanup
+  _callDragHandlers = { header, onMouseDown, onMouseMove, onMouseUp, onDblClick, overlay };
+}
+
+function destroyCallDrag() {
+  if (!_callDragHandlers) return;
+  const { header, onMouseDown, onMouseMove, onMouseUp, onDblClick, overlay } = _callDragHandlers;
+  header.removeEventListener('mousedown', onMouseDown);
+  document.removeEventListener('mousemove', onMouseMove);
+  document.removeEventListener('mouseup', onMouseUp);
+  if (overlay) overlay.removeEventListener('dblclick', onDblClick);
+  _callDragHandlers = null;
+  isDraggingCall = false;
 }

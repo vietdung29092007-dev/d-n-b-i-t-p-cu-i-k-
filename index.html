@@ -65,7 +65,10 @@
           <div class="call-header-sub" id="call-header-sub">Đang kết nối...</div>
         </div>
       </div>
-      <div class="call-timer" id="call-timer">00:00</div>
+      <div style="display:flex;align-items:center;gap:0.6rem;">
+        <div class="call-timer" id="call-timer">00:00</div>
+        <button class="call-pip-btn" id="call-btn-minimize" onclick="toggleCallPiP()" title="Thu nhỏ">⊖</button>
+      </div>
     </div>
 
     <!-- Video area -->
@@ -85,6 +88,16 @@
       <div class="call-local-wrap">
         <video id="call-local-video" autoplay playsinline muted></video>
         <div class="call-local-label">Bạn</div>
+      </div>
+    </div>
+
+    <!-- Mini controls bar (hiện khi minimized) -->
+    <div class="call-mini-bar" id="call-mini-bar">
+      <span class="mini-timer" id="call-mini-timer">00:00</span>
+      <div class="mini-actions">
+        <button onclick="toggleMic()" class="mini-btn" id="mini-btn-mic" title="Tắt/Mở mic">🎙️</button>
+        <button onclick="endCall()" class="mini-btn mini-btn-end" title="Kết thúc">📵</button>
+        <button onclick="toggleCallPiP()" class="mini-btn mini-btn-expand" title="Phóng to">⊕</button>
       </div>
     </div>
 
