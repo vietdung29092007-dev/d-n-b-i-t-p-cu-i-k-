@@ -29,6 +29,8 @@ let isCamOff          = false;
 let incomingCallRef   = null;   // Firebase listener
 let activeCallRef     = null;   // Firebase listener cuộc gọi đang active
 let ringtoneAudio     = null;   // Audio ringing
+let isScreenSharing   = false;  // Trạng thái share screen
+let screenStream      = null;   // Stream capture màn hình
 
 /* =============================================
    KHỞI TẠO — lắng nghe cuộc gọi đến
@@ -75,6 +77,13 @@ function listenForIncomingCalls() {
    ============================================= */
 async function callFriend(friendUid, friendName, friendAvatar) {
   if (!currentUser || !isFirebaseConfigured) return;
+  
+  // Kiểm tra chặn cuộc gọi
+  if (typeof myBlocks !== 'undefined' && (myBlocks[friendUid] || myBlockedBy[friendUid])) {
+    showToast('Không thể gọi! Người dùng này đã bị chặn hoặc đã chặn bạn.', 'error');
+    return;
+  }
+
   if (activeCallId) {
     showToast('Đang trong cuộc gọi khác!', 'error');
     return;
@@ -371,6 +380,13 @@ function cleanupCall() {
     localStream.getTracks().forEach(t => t.stop());
     localStream = null;
   }
+
+  // Dừng screen sharing stream
+  if (screenStream) {
+    screenStream.getTracks().forEach(t => t.stop());
+    screenStream = null;
+  }
+  isScreenSharing = false;
 
   // Đóng tất cả peer connections
   Object.values(peerConnections).forEach(pc => {
@@ -766,4 +782,94 @@ function escapeHtml(str) {
   if (typeof str !== 'string') return '';
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
             .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+/* =============================================
+   CHIA SẺ MÀN HÌNH
+   ============================================= */
+async function toggleScreenShare() {
+  if (!activeCallId) {
+    showToast('Chỉ có thể chia sẻ màn hình khi đang trong cuộc gọi!', 'info');
+    return;
+  }
+
+  if (isScreenSharing) {
+    stopScreenShare();
+  } else {
+    try {
+      screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+      isScreenSharing = true;
+
+      const videoTrack = screenStream.getVideoTracks()[0];
+      
+      // Khi người dùng dừng share bằng UI trình duyệt
+      videoTrack.onended = () => {
+        stopScreenShare();
+      };
+
+      // Thay thế track video trong tất cả Peer Connections
+      for (const pc of Object.values(peerConnections)) {
+        const senders = pc.getSenders();
+        const videoSender = senders.find(s => s.track && s.track.kind === 'video');
+        if (videoSender) {
+          videoSender.replaceTrack(videoTrack);
+        }
+      }
+
+      // Đổi local video display
+      const localVideo = document.getElementById('call-local-video');
+      if (localVideo) {
+        localVideo.srcObject = screenStream;
+      }
+
+      updateScreenShareButtonUI(true);
+      showToast('🖥️ Bắt đầu chia sẻ màn hình.', 'success');
+    } catch (err) {
+      console.error('Lỗi chia sẻ màn hình:', err);
+      showToast('❌ Không thể chia sẻ màn hình!', 'error');
+    }
+  }
+}
+
+function stopScreenShare() {
+  if (!isScreenSharing) return;
+  isScreenSharing = false;
+
+  if (screenStream) {
+    screenStream.getTracks().forEach(t => t.stop());
+    screenStream = null;
+  }
+
+  // Khôi phục track video gốc
+  if (localStream) {
+    const originalVideoTrack = localStream.getVideoTracks()[0];
+    if (originalVideoTrack) {
+      for (const pc of Object.values(peerConnections)) {
+        const senders = pc.getSenders();
+        const videoSender = senders.find(s => s.track && s.track.kind === 'video');
+        if (videoSender) {
+          videoSender.replaceTrack(originalVideoTrack);
+        }
+      }
+    }
+
+    const localVideo = document.getElementById('call-local-video');
+    if (localVideo) {
+      localVideo.srcObject = localStream;
+      localVideo.style.opacity = isCamOff ? '0' : '1';
+    }
+  }
+
+  updateScreenShareButtonUI(false);
+  showToast('🖥️ Đã dừng chia sẻ màn hình.', 'info');
+}
+
+function updateScreenShareButtonUI(sharing) {
+  const btn = document.getElementById('call-btn-screen');
+  if (btn) {
+    btn.innerHTML = sharing 
+      ? '<span class="ctrl-icon">⏹️</span> Dừng chia sẻ' 
+      : '<span class="ctrl-icon">🖥️</span> Chia sẻ';
+    btn.classList.toggle('active-on', sharing);
+  }
 }

@@ -6,14 +6,33 @@ let friendsRef = null;
 let friendReqRef = null;
 let myFriends = {};      // { uid: { name, avatar, online } }
 let pendingRequests = {}; // { fromUid: { name, avatar, timestamp } }
+let myBlocks = {};      // { uid: true } - users I blocked
+let myBlockedBy = {};   // { uid: true } - users who blocked me
+let friendStatusRefs = {}; // { uid: ref }
 
 /* =============================================
    KHỞI TẠO
    ============================================= */
 function initFriends() {
   if (!currentUser || !isFirebaseConfigured) return;
+  listenToBlocks();
   listenToFriends();
   listenToFriendRequests();
+}
+
+function listenToBlocks() {
+  if (!currentUser) return;
+  const myUid = currentUser.uid;
+
+  db.ref(`blocks/${myUid}`).on('value', (snap) => {
+    myBlocks = snap.val() || {};
+    renderFriendList();
+  });
+
+  db.ref(`blockedBy/${myUid}`).on('value', (snap) => {
+    myBlockedBy = snap.val() || {};
+    renderFriendList();
+  });
 }
 
 /* =============================================
@@ -256,7 +275,8 @@ function renderFriendList() {
   const container = document.getElementById('friend-list');
   if (!container) return;
 
-  const friends = Object.entries(myFriends);
+  // Lọc bỏ bạn bè bị chặn
+  const friends = Object.entries(myFriends).filter(([uid]) => !myBlocks[uid] && !myBlockedBy[uid]);
   if (friends.length === 0) {
     container.innerHTML = '<p class="log-empty">Chưa có bạn bè. Tìm bạn ngay!</p>';
     return;
@@ -273,14 +293,127 @@ function renderFriendList() {
         <span class="friend-name">${escapeHtml(f.name || 'Bạn bè')}</span>
         <span class="friend-status-text" id="fstatus-${uid}">—</span>
       </div>
-      <button class="btn-call-friend" title="Gọi video" onclick="callFriend('${uid}', '${escapeHtml(f.name || 'Bạn bè')}', '${f.avatar || ''}')">
-        📞
-      </button>
-      <button class="btn-chat-friend" title="Nhắn tin" onclick="openDMWithFriend('${uid}', '${escapeHtml(f.name || 'Bạn bè')}', '${f.avatar || ''}')">
-        💬
-      </button>
+      <div class="friend-actions-row" style="display:flex;gap:0.3rem;align-items:center;">
+        <button class="btn-call-friend" title="Gọi video" onclick="event.stopPropagation(); callFriend('${uid}', '${escapeHtml(f.name || 'Bạn bè')}', '${f.avatar || ''}')" style="padding:0.25rem 0.45rem;border:1px solid rgba(0,255,136,0.3);border-radius:6px;background:rgba(0,255,136,0.08);color:var(--accent-green);font-size:0.7rem;cursor:pointer;">
+          📞
+        </button>
+        <button class="btn-chat-friend" title="Nhắn tin" onclick="event.stopPropagation(); openDMWithFriend('${uid}', '${escapeHtml(f.name || 'Bạn bè')}', '${f.avatar || ''}')">
+          💬
+        </button>
+        <button class="btn-block-friend" title="Chặn" onclick="event.stopPropagation(); blockUser('${uid}')" style="padding:0.25rem 0.45rem;border:1px solid rgba(255,71,87,0.3);border-radius:6px;background:rgba(255,71,87,0.08);color:var(--accent-red);font-size:0.7rem;cursor:pointer;">
+          🚫
+        </button>
+        <button class="btn-report-friend" title="Báo cáo" onclick="event.stopPropagation(); reportUser('${uid}')" style="padding:0.25rem 0.45rem;border:1px solid rgba(255,159,67,0.3);border-radius:6px;background:rgba(255,159,67,0.08);color:#ff9f43;font-size:0.7rem;cursor:pointer;">
+          🚩
+        </button>
+      </div>
     </div>
   `).join('');
+
+  // Kích hoạt status check sau khi render
+  listenToFriendsStatus();
+}
+
+function listenToFriendsStatus() {
+  // Gỡ bỏ listener cũ
+  Object.entries(friendStatusRefs).forEach(([uid, ref]) => ref.off());
+  friendStatusRefs = {};
+
+  Object.keys(myFriends).forEach(uid => {
+    // Không nghe nếu bị chặn
+    if (myBlocks[uid] || myBlockedBy[uid]) return;
+
+    const statusRef = db.ref(`users/${uid}`);
+    friendStatusRefs[uid] = statusRef;
+
+    statusRef.on('value', (snap) => {
+      const u = snap.val();
+      if (!u) return;
+
+      const isOnline = u.online === true;
+      const dot = document.getElementById(`fdot-${uid}`);
+      const statusText = document.getElementById(`fstatus-${uid}`);
+
+      if (dot) {
+        dot.style.backgroundColor = isOnline ? 'var(--accent-green, #00ff88)' : 'var(--text-secondary, #708090)';
+        dot.classList.toggle('online', isOnline);
+      }
+
+      if (statusText) {
+        statusText.textContent = isOnline ? 'Online' : 'Offline';
+        statusText.style.color = isOnline ? 'var(--accent-green, #00ff88)' : 'var(--text-secondary, #a0aec0)';
+      }
+    });
+  });
+}
+
+/* =============================================
+   CHẶN & BÁO CÁO NGƯỜI DÙNG
+   ============================================= */
+async function blockUser(targetUid) {
+  if (!currentUser || !isFirebaseConfigured) return;
+  const name = myFriends[targetUid]?.name || 'người dùng này';
+  if (!confirm(`Bạn có chắc muốn chặn ${name}? Cả hai sẽ không thể nhắn tin hay gọi điện.`)) return;
+
+  const myUid = currentUser.uid;
+  const batch = {};
+
+  batch[`blocks/${myUid}/${targetUid}`] = true;
+  batch[`blockedBy/${targetUid}/${myUid}`] = true;
+
+  // Hủy kết bạn
+  batch[`friends/${myUid}/${targetUid}`] = null;
+  batch[`friends/${targetUid}/${myUid}`] = null;
+
+  // Xóa lời mời kết bạn (nếu có)
+  batch[`friendRequests/${myUid}/${targetUid}`] = null;
+  batch[`friendRequests/${targetUid}/${myUid}`] = null;
+
+  try {
+    await db.ref().update(batch);
+    showToast(`🚫 Đã chặn ${name}.`, 'info');
+  } catch (err) {
+    console.error('Block fail:', err);
+    showToast('Lỗi khi chặn người dùng!', 'error');
+  }
+}
+
+async function unblockUser(targetUid) {
+  if (!currentUser || !isFirebaseConfigured) return;
+  const myUid = currentUser.uid;
+  const batch = {};
+  batch[`blocks/${myUid}/${targetUid}`] = null;
+  batch[`blockedBy/${targetUid}/${myUid}`] = null;
+
+  try {
+    await db.ref().update(batch);
+    showToast(`Đã mở chặn.`, 'info');
+  } catch (err) {
+    console.error('Unblock fail:', err);
+  }
+}
+
+function reportUser(targetUid) {
+  if (!currentUser || !isFirebaseConfigured) return;
+  const name = myFriends[targetUid]?.name || 'người dùng này';
+  const reason = prompt(`Nhập lý do báo cáo ${name} (ví dụ: gửi tin nhắn rác, quấy rối, ngôn từ thù ghét...):`);
+  if (reason === null) return;
+  if (!reason.trim()) {
+    showToast('Vui lòng nhập lý do báo cáo!', 'error');
+    return;
+  }
+
+  db.ref(`reports/${targetUid}`).push({
+    reporterUid: currentUser.uid,
+    reporterName: currentUser.displayName || 'Ẩn danh',
+    reason: reason.trim(),
+    timestamp: firebase.database.ServerValue.TIMESTAMP
+  }).then(() => {
+    showToast('⚠️ Đã gửi báo cáo thành công! Admin sẽ xem xét.', 'success');
+  }).catch(err => {
+    console.error('Report fail:', err);
+    showToast('Lỗi khi gửi báo cáo!', 'error');
+  });
 }
 
 /* =============================================

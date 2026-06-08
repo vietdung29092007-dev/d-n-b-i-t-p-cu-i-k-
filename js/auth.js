@@ -30,8 +30,11 @@ async function signOut() {
       if (typeof endCall === 'function') endCall();
     }
     // Xóa presence trước khi đăng xuất
-    if (currentUser && currentRoomId) {
-      await leaveRoom();
+    if (currentUser) {
+      await db.ref('users/' + currentUser.uid + '/online').set(false);
+      if (currentRoomId) {
+        await leaveRoom();
+      }
     }
     await auth.signOut();
     currentUser = null;

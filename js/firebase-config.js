@@ -19,6 +19,7 @@ firebase.initializeApp(firebaseConfig);
 // Các service dùng chung
 const auth = firebase.auth();
 const db = firebase.database();
+const storage = firebase.storage();
 const googleProvider = new firebase.auth.GoogleAuthProvider();
 
 // Kiểm tra config hợp lệ

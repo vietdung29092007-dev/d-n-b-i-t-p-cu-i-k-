@@ -37,6 +37,18 @@ function listenToMyGroups() {
     });
     renderGroupList();
 
+    // Check if we were active in a group and got kicked
+    if (activeGroupId && !myGroups[activeGroupId]) {
+      activeGroupId = null;
+      const chatSection = document.getElementById('group-chat-section');
+      const placeholder = document.getElementById('group-chat-placeholder');
+      if (chatSection) chatSection.classList.add('hidden');
+      if (placeholder) placeholder.classList.remove('hidden');
+      if (groupChatRef) { groupChatRef.off(); groupChatRef = null; }
+      closeGroupDetailsModal();
+      showToast('⚠️ Bạn đã bị kick hoặc nhóm này không còn tồn tại.', 'error');
+    }
+
     // Tự động cập nhật modal chi tiết nhóm nếu đang mở
     const modal = document.getElementById('modal-group-details');
     if (modal && !modal.classList.contains('hidden') && activeGroupId) {
@@ -144,7 +156,17 @@ function openGroupChat(groupId) {
     .limitToLast(80);
 
   groupChatRef.on('child_added', (snap) => {
-    appendGroupMessage(snap.val());
+    if (typeof renderOrUpdateMessage === 'function') {
+      renderOrUpdateMessage(snap.key, snap.val());
+    } else {
+      appendGroupMessage(snap.val());
+    }
+  });
+
+  groupChatRef.on('child_changed', (snap) => {
+    if (typeof renderOrUpdateMessage === 'function') {
+      renderOrUpdateMessage(snap.key, snap.val());
+    }
   });
 
   // Focus input
@@ -480,10 +502,12 @@ function renderGroupDetails(groupId) {
               actionsHtml += `<button class="btn-member-action btn-promote" onclick="promoteToAdmin('${groupId}', '${uid}')">⭐ Phong QTV</button>`;
             }
             actionsHtml += `<button class="btn-member-action btn-transfer" onclick="transferHighestAdmin('${groupId}', '${uid}')">👑 Nhường Trưởng Nhóm</button>`;
+            actionsHtml += `<button class="btn-member-action btn-demote" style="background-color:var(--accent-red);color:white;border-color:rgba(255,71,87,0.3);" onclick="kickMember('${groupId}', '${uid}')">🚫 Kick</button>`;
           } else if (role === 'admin') {
             // Hạ quyền QTV thường
             actionsHtml += `<button class="btn-member-action btn-demote" onclick="demoteFromAdmin('${groupId}', '${uid}')">❌ Hạ QTV</button>`;
             actionsHtml += `<button class="btn-member-action btn-transfer" onclick="transferHighestAdmin('${groupId}', '${uid}')">👑 Nhường Trưởng Nhóm</button>`;
+            actionsHtml += `<button class="btn-member-action btn-demote" style="background-color:var(--accent-red);color:white;border-color:rgba(255,71,87,0.3);" onclick="kickMember('${groupId}', '${uid}')">🚫 Kick</button>`;
           }
         }
         // Nếu người dùng hiện tại là QTV thường
@@ -491,6 +515,7 @@ function renderGroupDetails(groupId) {
           // QTV thường có thể trao chức QTV của mình cho thành viên thường khác
           if (role === 'member') {
             actionsHtml += `<button class="btn-member-action btn-transfer" onclick="transferAdminStatus('${groupId}', '${uid}')">🔄 Trao QTV</button>`;
+            actionsHtml += `<button class="btn-member-action btn-demote" style="background-color:var(--accent-red);color:white;border-color:rgba(255,71,87,0.3);" onclick="kickMember('${groupId}', '${uid}')">🚫 Kick</button>`;
           }
         }
       }
@@ -631,6 +656,38 @@ async function transferHighestAdmin(groupId, targetUid) {
   } catch (err) {
     console.error('[Groups] transferHighestAdmin failed:', err);
     showToast('Lỗi khi chuyển giao quyền Trưởng nhóm!', 'error');
+  }
+}
+
+/**
+ * kickMember(groupId, targetUid)
+ * Kick một thành viên ra khỏi nhóm.
+ */
+async function kickMember(groupId, targetUid) {
+  if (!currentUser || !isFirebaseConfigured) return;
+  const group = myGroups[groupId];
+  if (!group) return;
+  const targetMember = group.members[targetUid];
+  if (!targetMember) return;
+
+  if (!confirm(`Bạn có chắc chắn muốn kick ${targetMember.name} ra khỏi nhóm?`)) return;
+
+  try {
+    // Xóa thành viên khỏi nhóm trên database
+    await db.ref(`groups/${groupId}/members/${targetUid}`).remove();
+    
+    // Nếu người bị kick là admin, xóa quyền admin luôn
+    if (group.admins && group.admins[targetUid]) {
+      await db.ref(`groups/${groupId}/admins/${targetUid}`).remove();
+    }
+
+    showToast(`🚫 Đã kick ${targetMember.name} ra khỏi nhóm!`, 'info');
+    
+    // Refresh modal details if still open
+    renderGroupDetails(groupId);
+  } catch (err) {
+    console.error('[Groups] kickMember failed:', err);
+    showToast('Lỗi khi kick thành viên!', 'error');
   }
 }
 
