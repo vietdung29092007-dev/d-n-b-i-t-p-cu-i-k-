@@ -235,11 +235,12 @@
 .group-chat-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 0.6rem;
+  padding: 0.6rem 0.75rem;
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: 0.3rem;
   min-height: 0;
+  align-items: stretch;   /* cho phép chat-msg-me dùng align-self: flex-end */
 }
 .group-chat-messages::-webkit-scrollbar { width: 4px; }
 .group-chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }

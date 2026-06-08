@@ -21,56 +21,83 @@
 .chat-msg {
   display: flex;
   gap: 0.5rem;
-  align-items: flex-start;
+  align-items: flex-end;    /* căn đáy để avatar sát bubble cuối */
+  max-width: 100%;
+  animation: msgSlideIn 0.18s ease;
+}
+
+@keyframes msgSlideIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Tin nhắn của mình: đẩy sang phải */
+.chat-msg-me {
+  flex-direction: row-reverse; /* avatar sang phải, bubble sang trái của avatar */
+  align-self: flex-end;
 }
 
 .chat-avatar {
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
-  margin-top: 0.15rem;
   background: var(--bg-main);
-}
-
-.chat-bubble {
-  background: var(--bg-card);
-  border-radius: 10px;
-  padding: 0.4rem 0.6rem;
-  max-width: 80%;
   border: 1px solid var(--border);
 }
 
-.chat-msg-me .chat-bubble {
-  background: rgba(0, 212, 255, 0.08);
-  border-color: rgba(0, 212, 255, 0.2);
+/* Bubble bao nội dung */
+.chat-bubble {
+  background: var(--bg-card);
+  border-radius: 14px 14px 14px 4px;   /* góc dưới trái nhọn → cho người khác */
+  padding: 0.45rem 0.65rem;
+  max-width: 72%;
+  border: 1px solid var(--border);
+  word-break: break-word;
+  position: relative;
 }
 
+/* Bubble của mình */
+.chat-msg-me .chat-bubble {
+  background: linear-gradient(135deg, rgba(0,212,255,0.18), rgba(0,255,136,0.12));
+  border-color: rgba(0,212,255,0.3);
+  border-radius: 14px 14px 4px 14px;   /* góc dưới phải nhọn → của mình */
+  box-shadow: 0 2px 8px rgba(0,212,255,0.1);
+}
+
+/* Ẩn tên khi là tin nhắn của mình */
+.chat-msg-me .chat-name {
+  display: none;
+}
+
+/* Meta (tên + giờ) */
 .chat-meta {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  margin-bottom: 0.15rem;
+  margin-bottom: 0.1rem;
 }
 .chat-name {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
   color: var(--accent);
 }
-.chat-msg-me .chat-name {
-  color: var(--accent-green);
-}
 .chat-time {
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   color: var(--text-secondary);
   font-family: 'Space Mono', monospace;
+}
+
+/* Giờ của tin nhắn mình: căn phải */
+.chat-msg-me .chat-time {
+  margin-left: auto;
 }
 
 .chat-text {
   font-size: 0.78rem;
   color: var(--text-primary);
-  line-height: 1.45;
+  line-height: 1.5;
   word-break: break-word;
 }
 
