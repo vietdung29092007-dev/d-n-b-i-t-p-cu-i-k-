@@ -265,19 +265,19 @@ function renderGroupList() {
   const container = document.getElementById('group-list');
   if (!container) return;
 
-  const groups = Object.entries(myGroups);
+  // Chỉ hiện nhóm thật — lọc bỏ DM (type === 'dm')
+  const groups = Object.entries(myGroups).filter(([, g]) => g.type !== 'dm');
   if (groups.length === 0) {
     container.innerHTML = '<p class="log-empty">Chưa có nhóm nào...</p>';
     return;
   }
 
   container.innerHTML = groups.map(([gid, g]) => {
-    const icon = g.type === 'dm' ? '💬' : '👥';
     const isActive = gid === activeGroupId;
     return `
       <div class="group-item ${isActive ? 'active' : ''}" data-gid="${gid}"
            onclick="openGroupChat('${gid}')">
-        <div class="group-icon">${icon}</div>
+        <div class="group-icon">👥</div>
         <div class="group-info">
           <span class="group-name">${escapeHtml(g.name || 'Nhóm')}</span>
           <span class="group-member-count">${g.memberCount || 1} thành viên</span>

@@ -1,14 +1,139 @@
 /* ================================================
-   friends.css — Kết bạn & Danh sách bạn bè
+   LAYOUT 2 CỘT: Sidebar bạn bè + Khu DM chat
    ================================================ */
-
-/* ----- Panel Bạn bè ----- */
 .friends-panel {
   display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
+  flex-direction: row;
+  gap: 0;
   height: 100%;
+  overflow: hidden;
 }
+
+/* ----- Cột trái: Danh sách bạn bè (220px) ----- */
+.friends-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem 0.5rem 0.5rem 0;
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.friends-sidebar::-webkit-scrollbar { width: 3px; }
+.friends-sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+/* ----- Cột phải: Khu vực DM chat ----- */
+.friends-chat-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding-left: 0.5rem;
+  overflow: hidden;
+}
+
+/* Placeholder khi chưa chọn bạn */
+.dm-chat-placeholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  text-align: center;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+}
+.dm-chat-placeholder .ph-icon { font-size: 2.2rem; opacity: 0.4; }
+
+/* DM Chat Section */
+.dm-chat-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg-card);
+  min-height: 0;
+  position: relative;
+}
+.dm-chat-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--chat-bg-img, none);
+  background-size: cover;
+  background-position: center;
+  opacity: 0.07;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 9px;
+}
+.dm-chat-section > * { position: relative; z-index: 1; }
+
+/* DM Header */
+.dm-chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.7rem;
+  background: rgba(0,212,255,0.04);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.dm-chat-peer {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+.dm-peer-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.dm-peer-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--bg-main);
+  border: 2px solid var(--border);
+}
+.dm-peer-online-dot {
+  position: absolute;
+  bottom: -1px; right: -1px;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--bg-card);
+  background: var(--text-secondary);
+  transition: background 0.3s;
+}
+.dm-peer-online-dot.online {
+  background: var(--accent-green);
+  box-shadow: var(--glow-green);
+}
+.dm-peer-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+.dm-peer-status {
+  font-size: 0.62rem;
+  color: var(--text-secondary);
+  font-family: 'Space Mono', monospace;
+}
+
+/* ----- Friend item active state khi đang chat ----- */
+.friend-item.dm-active {
+  border-color: var(--accent);
+  background: rgba(0,212,255,0.06);
+  box-shadow: 0 0 0 1px rgba(0,212,255,0.15);
+}
+
 
 /* ----- Nút Tìm bạn ----- */
 .btn-find-friend {

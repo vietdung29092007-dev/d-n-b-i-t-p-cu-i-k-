@@ -357,25 +357,87 @@
           <!-- Tab Kết Bạn -->
           <div class="community-pane" id="pane-friends">
             <div class="friends-panel">
-              <button class="btn-find-friend" onclick="openFindFriendModal()">
-                🔍 Tìm thêm bạn bè
-              </button>
 
-              <!-- Lời mời đến -->
-              <div class="friend-requests-section hidden" id="friend-requests-section">
-                <div class="friend-requests-title">🔔 Lời mời kết bạn</div>
-                <div id="friend-requests-list"></div>
-              </div>
+              <!-- ===== CỘT TRÁI: Danh sách bạn bè ===== -->
+              <div class="friends-sidebar">
+                <button class="btn-find-friend" onclick="openFindFriendModal()">
+                  🔍 Tìm thêm bạn bè
+                </button>
 
-              <!-- Danh sách bạn bè -->
-              <div class="friend-list-section">
-                <div class="friend-list-title">👤 Bạn bè của tôi</div>
-                <div class="friend-list" id="friend-list">
-                  <p class="log-empty">Chưa có bạn bè...</p>
+                <!-- Lời mời đến -->
+                <div class="friend-requests-section hidden" id="friend-requests-section">
+                  <div class="friend-requests-title">🔔 Lời mời kết bạn</div>
+                  <div id="friend-requests-list"></div>
+                </div>
+
+                <!-- Danh sách bạn bè -->
+                <div class="friend-list-section">
+                  <div class="friend-list-title">👤 Bạn bè của tôi</div>
+                  <div class="friend-list" id="friend-list">
+                    <p class="log-empty">Chưa có bạn bè...</p>
+                  </div>
                 </div>
               </div>
-            </div>
+
+              <!-- ===== CỘT PHẢI: Khu vực DM Chat ===== -->
+              <div class="friends-chat-area">
+
+                <!-- Placeholder khi chưa chọn bạn -->
+                <div class="dm-chat-placeholder" id="dm-chat-placeholder">
+                  <span class="ph-icon">💬</span>
+                  <span>Chọn bạn bè để bắt đầu nhắn tin</span>
+                </div>
+
+                <!-- DM Chat Section -->
+                <div class="dm-chat-section hidden" id="dm-chat-section">
+                  <!-- Header -->
+                  <div class="dm-chat-header" id="dm-chat-header">
+                    <div class="dm-chat-peer">
+                      <div class="dm-peer-avatar-wrap">
+                        <img class="dm-peer-avatar" id="dm-peer-avatar" src="" alt="" onerror="this.style.display='none'"/>
+                        <span class="dm-peer-online-dot" id="dm-peer-online-dot"></span>
+                      </div>
+                      <div>
+                        <div class="dm-peer-name" id="dm-peer-name">Bạn bè</div>
+                        <div class="dm-peer-status" id="dm-peer-status">Offline</div>
+                      </div>
+                    </div>
+                    <div style="display:flex;gap:0.35rem;align-items:center;">
+                      <button class="btn-group-bg" onclick="activeDmGroupId && openBgPickerModal(activeDmGroupId)" title="Đổi ảnh nền">
+                        🖼️
+                      </button>
+                      <button class="btn-call-friend" style="padding:0.28rem 0.55rem;border:1px solid rgba(0,255,136,0.3);border-radius:8px;background:rgba(0,255,136,0.08);color:var(--accent-green);font-size:0.75rem;cursor:pointer;" onclick="activeDmFriendUid && callFriend(activeDmFriendUid, document.getElementById('dm-peer-name').textContent, document.getElementById('dm-peer-avatar').src)" title="Gọi video">
+                        📞 Gọi
+                      </button>
+                      <button class="btn-group-search" onclick="toggleDmSearch()" title="Tìm kiếm" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text-primary);padding:0.3rem 0.55rem;border-radius:8px;font-size:0.72rem;cursor:pointer;">
+                        🔍
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Search bar (ẩn mặc định) -->
+                  <div class="group-chat-search-bar hidden" id="dm-chat-search-bar" style="display:none;align-items:center;gap:0.4rem;padding:0.45rem 0.6rem;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.2);">
+                    <input type="text" class="chat-search-input" id="dm-search-input" placeholder="Tìm kiếm tin nhắn..." style="flex:1;padding:0.35rem 0.6rem;font-size:0.75rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-card);color:var(--text-primary);outline:none;"/>
+                    <button class="btn-close-search" onclick="closeDmSearch()" style="background:none;border:none;color:var(--accent-red);cursor:pointer;font-size:0.8rem;padding:0 0.2rem;">✕</button>
+                  </div>
+
+                  <!-- Messages -->
+                  <div class="group-chat-messages" id="dm-chat-messages"></div>
+
+                  <!-- Input -->
+                  <div class="group-chat-input-wrap">
+                    <button class="chat-tool-btn" onclick="toggleDmPickerPanel()" title="Emoji">😊</button>
+                    <button class="chat-tool-btn" onclick="triggerDmFileSelect()" title="Đính kèm">📎</button>
+                    <input type="text" class="group-chat-input" id="dm-chat-input" placeholder="Nhắn tin với bạn bè..." maxlength="300"/>
+                    <button class="btn-group-send" onclick="sendDmMessage()">&#x27A4;</button>
+                  </div>
+                  <input type="file" id="dm-file-input" style="display:none" onchange="handleDmFileSelected(event)"/>
+                </div>
+
+              </div><!-- end friends-chat-area -->
+            </div><!-- end friends-panel -->
           </div>
+
 
           <!-- Tab Nhóm Chat Riêng -->
           <div class="community-pane" id="pane-groups">

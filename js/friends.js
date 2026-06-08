@@ -283,7 +283,8 @@ function renderFriendList() {
   }
 
   container.innerHTML = friends.map(([uid, f]) => `
-    <div class="friend-item" data-uid="${uid}">
+    <div class="friend-item" data-uid="${uid}"
+         onclick="openDMWithFriend('${uid}', '${escapeHtml(f.name || 'Bạn bè')}', '${f.avatar || ''}')">
       <div class="friend-avatar-wrap">
         <img class="friend-avatar" src="${f.avatar || ''}"
              alt="" onerror="this.style.display='none'"/>
@@ -293,18 +294,12 @@ function renderFriendList() {
         <span class="friend-name">${escapeHtml(f.name || 'Bạn bè')}</span>
         <span class="friend-status-text" id="fstatus-${uid}">—</span>
       </div>
-      <div class="friend-actions-row" style="display:flex;gap:0.3rem;align-items:center;">
-        <button class="btn-call-friend" title="Gọi video" onclick="event.stopPropagation(); callFriend('${uid}', '${escapeHtml(f.name || 'Bạn bè')}', '${f.avatar || ''}')" style="padding:0.25rem 0.45rem;border:1px solid rgba(0,255,136,0.3);border-radius:6px;background:rgba(0,255,136,0.08);color:var(--accent-green);font-size:0.7rem;cursor:pointer;">
+      <div class="friend-actions-row" style="display:flex;gap:0.3rem;align-items:center;" onclick="event.stopPropagation()">
+        <button class="btn-call-friend" title="Gọi video" onclick="callFriend('${uid}', '${escapeHtml(f.name || 'Bạn bè')}', '${f.avatar || ''}')" style="padding:0.25rem 0.45rem;border:1px solid rgba(0,255,136,0.3);border-radius:6px;background:rgba(0,255,136,0.08);color:var(--accent-green);font-size:0.7rem;cursor:pointer;">
           📞
         </button>
-        <button class="btn-chat-friend" title="Nhắn tin" onclick="event.stopPropagation(); openDMWithFriend('${uid}', '${escapeHtml(f.name || 'Bạn bè')}', '${f.avatar || ''}')">
-          💬
-        </button>
-        <button class="btn-block-friend" title="Chặn" onclick="event.stopPropagation(); blockUser('${uid}')" style="padding:0.25rem 0.45rem;border:1px solid rgba(255,71,87,0.3);border-radius:6px;background:rgba(255,71,87,0.08);color:var(--accent-red);font-size:0.7rem;cursor:pointer;">
+        <button class="btn-block-friend" title="Chặn" onclick="blockUser('${uid}')" style="padding:0.25rem 0.45rem;border:1px solid rgba(255,71,87,0.3);border-radius:6px;background:rgba(255,71,87,0.08);color:var(--accent-red);font-size:0.7rem;cursor:pointer;">
           🚫
-        </button>
-        <button class="btn-report-friend" title="Báo cáo" onclick="event.stopPropagation(); reportUser('${uid}')" style="padding:0.25rem 0.45rem;border:1px solid rgba(255,159,67,0.3);border-radius:6px;background:rgba(255,159,67,0.08);color:#ff9f43;font-size:0.7rem;cursor:pointer;">
-          🚩
         </button>
       </div>
     </div>
@@ -502,12 +497,20 @@ function onSearchInput() {
 }
 
 /* =============================================
-   MỞ CHAT TRỰC TIẾP VỚI BẠN (DM)
-   Tạo nhóm riêng 2 người nếu chưa có
+   MỞ CHAT TRỰC TIẾP VỚI BẠN (DM) — trong tab Bạn bè
    ============================================= */
+let activeDmGroupId = null;
+let activeDmFriendUid = null;
+let dmChatRef = null;
+let dmPeerStatusRef = null;
+let dmLoadedMessages = {};
+
 async function openDMWithFriend(friendUid, friendName, friendAvatar) {
   if (!currentUser || !isFirebaseConfigured) return;
   const myUid = currentUser.uid;
+
+  // Chuyển sang tab Bạn bè (không phải tab Nhóm)
+  switchCommunityTab('friends');
 
   // ID phòng DM: sort 2 uid để luôn nhất quán
   const dmId = [myUid, friendUid].sort().join('_dm_');
@@ -516,7 +519,7 @@ async function openDMWithFriend(friendUid, friendName, friendAvatar) {
   const snap = await db.ref(`groups/${dmId}`).once('value');
   if (!snap.exists()) {
     const batch = {};
-    batch[`groups/${dmId}/name`] = `DM: ${friendName}`;
+    batch[`groups/${dmId}/name`] = friendName;   // tên bạn, không phải "DM: ..."
     batch[`groups/${dmId}/type`] = 'dm';
     batch[`groups/${dmId}/createdBy`] = myUid;
     batch[`groups/${dmId}/createdAt`] = firebase.database.ServerValue.TIMESTAMP;
@@ -533,10 +536,210 @@ async function openDMWithFriend(friendUid, friendName, friendAvatar) {
     await db.ref().update(batch);
   }
 
-  // Chuyển sang tab nhóm và mở nhóm DM
-  switchCommunityTab('groups');
-  openGroupChat(dmId);
+  openDmChat(dmId, friendUid, friendName, friendAvatar);
 }
+
+function openDmChat(dmId, friendUid, friendName, friendAvatar) {
+  activeDmGroupId = dmId;
+  activeDmFriendUid = friendUid;
+  dmLoadedMessages = {};
+
+  // Highlight friend item
+  document.querySelectorAll('.friend-item').forEach(el => {
+    el.classList.toggle('dm-active', el.dataset.uid === friendUid);
+  });
+
+  // Hiện khu chat, ẩn placeholder
+  const section = document.getElementById('dm-chat-section');
+  const placeholder = document.getElementById('dm-chat-placeholder');
+  if (section) section.classList.remove('hidden');
+  if (placeholder) placeholder.classList.add('hidden');
+
+  // Cập nhật header
+  const nameEl = document.getElementById('dm-peer-name');
+  const avatarEl = document.getElementById('dm-peer-avatar');
+  if (nameEl) nameEl.textContent = friendName;
+  if (avatarEl) { avatarEl.src = friendAvatar || ''; }
+
+  // Xóa tin nhắn cũ
+  const msgs = document.getElementById('dm-chat-messages');
+  if (msgs) msgs.innerHTML = '';
+
+  // Dừng listener cũ
+  if (dmChatRef) dmChatRef.off();
+  if (dmPeerStatusRef) dmPeerStatusRef.off();
+
+  // Lắng nghe tin nhắn DM
+  dmChatRef = db.ref(`groups/${dmId}/chat`).orderByChild('timestamp').limitToLast(80);
+  dmChatRef.on('child_added', (snap) => {
+    renderDmMessage(snap.key, snap.val());
+  });
+  dmChatRef.on('child_changed', (snap) => {
+    renderDmMessage(snap.key, snap.val());
+  });
+
+  // Lắng nghe trạng thái online của bạn
+  dmPeerStatusRef = db.ref(`users/${friendUid}`);
+  dmPeerStatusRef.on('value', (snap) => {
+    const u = snap.val();
+    const dot = document.getElementById('dm-peer-online-dot');
+    const statusEl = document.getElementById('dm-peer-status');
+    const isOnline = u && u.online === true;
+    if (dot) { dot.style.backgroundColor = isOnline ? 'var(--accent-green)' : 'var(--text-secondary)'; dot.classList.toggle('online', isOnline); }
+    if (statusEl) { statusEl.textContent = isOnline ? '🟢 Online' : '⚫ Offline'; statusEl.style.color = isOnline ? 'var(--accent-green)' : 'var(--text-secondary)'; }
+    // Update avatar if changed
+    if (u && u.avatar && avatarEl) avatarEl.src = u.avatar;
+  });
+
+  // Load saved background
+  if (typeof loadGroupBackground === 'function') {
+    setTimeout(() => loadGroupBackground(dmId), 100);
+  }
+
+  // Focus input
+  setTimeout(() => {
+    const input = document.getElementById('dm-chat-input');
+    if (input) input.focus();
+  }, 150);
+}
+
+function renderDmMessage(msgId, msg) {
+  if (!msg) return;
+  dmLoadedMessages[msgId] = msg;
+  const container = document.getElementById('dm-chat-messages');
+  if (!container) return;
+
+  const isMe = currentUser && msg.uid === currentUser.uid;
+  const time = msg.timestamp
+    ? new Date(msg.timestamp).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+    : '';
+
+  // Đánh dấu đã xem
+  if (currentUser && msg.uid !== currentUser.uid && (!msg.readBy || !msg.readBy[currentUser.uid])) {
+    db.ref(`groups/${activeDmGroupId}/chat/${msgId}/readBy/${currentUser.uid}`).set(currentUser.displayName || 'Ẩn danh');
+  }
+
+  let div = document.getElementById(`dm-msg-${msgId}`);
+  let isNew = false;
+  if (!div) { div = document.createElement('div'); div.id = `dm-msg-${msgId}`; isNew = true; }
+
+  div.className = `chat-msg ${isMe ? 'chat-msg-me' : ''}`;
+
+  let bodyHtml = '';
+  if (msg.isUnsent) {
+    bodyHtml = '<div class="chat-text msg-unsent-text">🚫 Tin nhắn đã được thu hồi</div>';
+  } else if (msg.type === 'image') {
+    bodyHtml = `<img class="chat-image-render" src="${msg.fileUrl}" onclick="openLightbox('${msg.fileUrl}')" alt="Hình ảnh"/>`;
+  } else if (msg.type === 'file') {
+    bodyHtml = `<div class="chat-file-card"><span class="chat-file-icon">📄</span><div class="chat-file-info"><span class="chat-file-name">${escapeHtml(msg.fileName||'')}</span></div><a class="btn-file-download" href="${msg.fileUrl}" target="_blank">📥</a></div>`;
+  } else {
+    bodyHtml = `<div class="chat-text">${escapeHtml(msg.text || '')}</div>`;
+  }
+
+  // Seen
+  let seenHtml = '';
+  if (isMe && msg.readBy) {
+    const readers = Object.entries(msg.readBy).filter(([uid]) => uid !== currentUser.uid);
+    if (readers.length > 0) seenHtml = '<span class="chat-read-receipts">✓ Đã xem</span>';
+  }
+
+  div.innerHTML = `
+    <img class="chat-avatar" src="${msg.avatar || ''}" alt="" onerror="this.style.display='none'"/>
+    <div class="chat-bubble">
+      ${!isMe ? `<div class="chat-meta"><span class="chat-name">${escapeHtml(msg.name||'')}</span><span class="chat-time">${time}</span></div>` : `<div class="chat-meta"><span class="chat-time">${time}</span></div>`}
+      ${bodyHtml}
+      ${seenHtml}
+    </div>
+    <div class="chat-msg-actions" style="opacity:0;pointer-events:none;">
+      ${!msg.isUnsent && isMe ? `<button class="chat-action-btn btn-delete-msg" title="Thu hồi" onclick="unsendDmMessage('${msgId}')">🗑️</button>` : ''}
+    </div>
+  `;
+  div.onmouseenter = () => { const a = div.querySelector('.chat-msg-actions'); if(a){a.style.opacity='1';a.style.pointerEvents='auto';} };
+  div.onmouseleave = () => { const a = div.querySelector('.chat-msg-actions'); if(a){a.style.opacity='0';a.style.pointerEvents='none';} };
+
+  if (isNew) container.appendChild(div);
+  if (isNew) container.scrollTop = container.scrollHeight;
+
+  while (container.children.length > 120) container.removeChild(container.firstChild);
+}
+
+function sendDmMessage() {
+  if (!currentUser || !activeDmGroupId || !isFirebaseConfigured) return;
+
+  // Check block
+  if (activeDmFriendUid && (myBlocks[activeDmFriendUid] || myBlockedBy[activeDmFriendUid])) {
+    showToast('⚠️ Không thể gửi tin nhắn! Người dùng đã bị chặn.', 'error');
+    return;
+  }
+
+  const input = document.getElementById('dm-chat-input');
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) return;
+
+  db.ref(`groups/${activeDmGroupId}/chat`).push({
+    uid: currentUser.uid,
+    name: currentUser.displayName || 'Ẩn danh',
+    avatar: currentUser.photoURL || '',
+    text: text,
+    type: 'text',
+    timestamp: firebase.database.ServerValue.TIMESTAMP
+  });
+
+  input.value = '';
+  input.focus();
+}
+
+async function unsendDmMessage(msgId) {
+  if (!currentUser || !activeDmGroupId) return;
+  await db.ref(`groups/${activeDmGroupId}/chat/${msgId}`).update({ isUnsent: true, text: '' });
+}
+
+function toggleDmSearch() {
+  const bar = document.getElementById('dm-chat-search-bar');
+  if (!bar) return;
+  const isHidden = bar.style.display === 'none' || bar.style.display === '';
+  bar.style.display = isHidden ? 'flex' : 'none';
+  if (isHidden) document.getElementById('dm-search-input')?.focus();
+}
+function closeDmSearch() {
+  const bar = document.getElementById('dm-chat-search-bar');
+  if (bar) bar.style.display = 'none';
+}
+function toggleDmPickerPanel() { showToast('Tính năng emoji cho DM sắp ra mắt!', 'info'); }
+function triggerDmFileSelect() { document.getElementById('dm-file-input')?.click(); }
+async function handleDmFileSelected(event) {
+  const file = event.target.files[0];
+  if (!file || !activeDmGroupId) return;
+  if (file.size > 102400 && !storage) { showToast('Tệp quá lớn!', 'error'); return; }
+  showToast('📁 Đang tải lên...', 'info');
+  try {
+    let fileUrl = '';
+    if (storage) {
+      const ref = storage.ref().child(`chats/${activeDmGroupId}/${Date.now()}_${file.name}`);
+      const snap = await ref.put(file);
+      fileUrl = await snap.ref.getDownloadURL();
+    } else {
+      fileUrl = await new Promise((res, rej) => { const r = new FileReader(); r.onload = e => res(e.target.result); r.onerror = rej; r.readAsDataURL(file); });
+    }
+    const type = file.type.startsWith('image/') ? 'image' : 'file';
+    db.ref(`groups/${activeDmGroupId}/chat`).push({
+      uid: currentUser.uid, name: currentUser.displayName || 'Ẩn danh', avatar: currentUser.photoURL || '',
+      text: '', type, fileUrl, fileName: file.name, fileSize: file.size,
+      timestamp: firebase.database.ServerValue.TIMESTAMP
+    });
+    showToast('Tải lên thành công!', 'success');
+  } catch(e) { showToast('Lỗi tải tệp!', 'error'); }
+  event.target.value = '';
+}
+
+// Enter to send DM
+document.addEventListener('DOMContentLoaded', () => {
+  const dmInput = document.getElementById('dm-chat-input');
+  if (dmInput) dmInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendDmMessage(); }
+  });
+});
 
 /* =============================================
    TOAST NOTIFICATION
