@@ -111,9 +111,6 @@ Mã nguồn được viết hoàn toàn bằng Vanilla JavaScript và CSS thuầ
 
 ```text
 PoseAlert/
-├── assets/               ← Tài nguyên tĩnh của Website
-│   ├── images/
-│   └── sounds/
 ├── css/                  ← (19 Module CSS)
 │   ├── variables.css, layout.css, camera.css...
 │   └── gamification.css, network.css, chat.css...
